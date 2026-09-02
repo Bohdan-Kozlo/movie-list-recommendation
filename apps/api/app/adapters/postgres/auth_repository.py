@@ -8,7 +8,8 @@ from sqlalchemy import Engine, select, update
 from sqlalchemy.engine import CursorResult
 from sqlalchemy.orm import Session
 
-from app.modules.auth.application import SessionRecord, User
+from app.adapters.postgres.mappers.auth import to_session_record, to_user
+from app.modules.auth.domain import SessionRecord, User
 from app.modules.auth.models import AuthIdentity, AuthSession, AuthUser
 
 
@@ -21,19 +22,19 @@ class SqlAlchemyAuthRepository:
     def user_by_email(self, email: str) -> User | None:
         with Session(self._engine) as session:
             user = session.scalar(select(AuthUser).where(AuthUser.email == email))
-            return self._user(user) if user is not None else None
+            return to_user(user) if user is not None else None
 
     def user_by_id(self, user_id: UUID) -> User | None:
         with Session(self._engine) as session:
             user = session.get(AuthUser, user_id)
-            return self._user(user) if user is not None else None
+            return to_user(user) if user is not None else None
 
     def create_user(self, email: str, password_hash: str | None) -> User:
         with Session(self._engine) as session, session.begin():
             user = AuthUser(email=email, password_hash=password_hash)
             session.add(user)
             session.flush()
-            return self._user(user)
+            return to_user(user)
 
     def identity_user_id(self, provider: str, subject: str) -> UUID | None:
         with Session(self._engine) as session:
@@ -78,7 +79,7 @@ class SqlAlchemyAuthRepository:
                     AuthSession.expires_at > datetime.now(UTC),
                 )
             )
-            return self._session(record) if record is not None else None
+            return to_session_record(record) if record is not None else None
 
     def replace_refresh_token(
         self,
@@ -110,17 +111,3 @@ class SqlAlchemyAuthRepository:
                 .where(AuthSession.id == session_id, AuthSession.revoked_at.is_(None))
                 .values(revoked_at=datetime.now(UTC))
             )
-
-    @staticmethod
-    def _user(user: AuthUser) -> User:
-        return User(id=user.id, email=user.email, password_hash=user.password_hash)
-
-    @staticmethod
-    def _session(session: AuthSession) -> SessionRecord:
-        return SessionRecord(
-            id=session.id,
-            user_id=session.user_id,
-            refresh_token_hash=session.refresh_token_hash,
-            expires_at=session.expires_at,
-            revoked_at=session.revoked_at,
-        )

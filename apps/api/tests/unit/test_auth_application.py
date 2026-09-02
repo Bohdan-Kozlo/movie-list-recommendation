@@ -2,13 +2,21 @@ from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
 import pytest
-from app.modules.auth.application import (
-    AuthApplicationService,
+from app.modules.auth.dependencies import AuthUseCases
+from app.modules.auth.domain import (
     DuplicateEmailError,
     GoogleProfile,
     InvalidCredentialsError,
     SessionRecord,
     User,
+)
+from app.modules.auth.use_cases import (
+    GetCurrentUser,
+    LoginUser,
+    LogoutSession,
+    RefreshSession,
+    RegisterUser,
+    SignInWithGoogle,
 )
 
 
@@ -119,54 +127,64 @@ class FakeTokens:
 
 
 @pytest.fixture
-def service() -> AuthApplicationService:
-    return AuthApplicationService(FakeRepository(), FakePasswords(), FakeTokens())
+def use_cases() -> AuthUseCases:
+    repository = FakeRepository()
+    passwords = FakePasswords()
+    tokens = FakeTokens()
+    return AuthUseCases(
+        register_user=RegisterUser(repository, passwords, tokens),
+        login_user=LoginUser(repository, passwords, tokens),
+        refresh_session=RefreshSession(repository, tokens),
+        logout_session=LogoutSession(repository, tokens),
+        get_current_user=GetCurrentUser(repository, tokens),
+        sign_in_with_google=SignInWithGoogle(repository, tokens),
+    )
 
 
-def test_registers_and_authenticates_an_email_user(service: AuthApplicationService) -> None:
-    user, tokens = service.register("Person@Example.com", "eightchars")
+def test_registers_and_authenticates_an_email_user(use_cases: AuthUseCases) -> None:
+    user, tokens = use_cases.register_user.execute("Person@Example.com", "eightchars")
 
     assert user.email == "person@example.com"
     assert tokens.access_token.startswith("access:")
-    assert service.current_user(tokens.access_token) == user
+    assert use_cases.get_current_user.execute(tokens.access_token) == user
 
 
-def test_rejects_duplicate_email_and_invalid_credentials(service: AuthApplicationService) -> None:
-    service.register("person@example.com", "eightchars")
+def test_rejects_duplicate_email_and_invalid_credentials(use_cases: AuthUseCases) -> None:
+    use_cases.register_user.execute("person@example.com", "eightchars")
 
     with pytest.raises(DuplicateEmailError):
-        service.register("PERSON@example.com", "anotherpw")
+        use_cases.register_user.execute("PERSON@example.com", "anotherpw")
     with pytest.raises(InvalidCredentialsError):
-        service.login("person@example.com", "incorrect")
+        use_cases.login_user.execute("person@example.com", "incorrect")
 
 
-def test_rotates_and_revokes_refresh_sessions(service: AuthApplicationService) -> None:
-    _, original_tokens = service.register("person@example.com", "eightchars")
+def test_rotates_and_revokes_refresh_sessions(use_cases: AuthUseCases) -> None:
+    _, original_tokens = use_cases.register_user.execute("person@example.com", "eightchars")
 
-    replacement = service.refresh(original_tokens.refresh_token)
-    service.logout(replacement.access_token)
-
-    with pytest.raises(InvalidCredentialsError):
-        service.refresh(original_tokens.refresh_token)
-    with pytest.raises(InvalidCredentialsError):
-        service.current_user(replacement.access_token)
-
-
-def test_revokes_a_session_with_its_valid_refresh_token(service: AuthApplicationService) -> None:
-    _, tokens = service.register("person@example.com", "eightchars")
-
-    service.logout_with_refresh(tokens.refresh_token)
+    replacement = use_cases.refresh_session.execute(original_tokens.refresh_token)
+    use_cases.logout_session.execute(replacement.access_token, None)
 
     with pytest.raises(InvalidCredentialsError):
-        service.refresh(tokens.refresh_token)
+        use_cases.refresh_session.execute(original_tokens.refresh_token)
+    with pytest.raises(InvalidCredentialsError):
+        use_cases.get_current_user.execute(replacement.access_token)
+
+
+def test_revokes_a_session_with_its_valid_refresh_token(use_cases: AuthUseCases) -> None:
+    _, tokens = use_cases.register_user.execute("person@example.com", "eightchars")
+
+    use_cases.logout_session.execute(None, tokens.refresh_token)
+
+    with pytest.raises(InvalidCredentialsError):
+        use_cases.refresh_session.execute(tokens.refresh_token)
 
 
 def test_links_a_verified_google_identity_to_normalized_email(
-    service: AuthApplicationService,
+    use_cases: AuthUseCases,
 ) -> None:
-    email_user, _ = service.register("Person@Example.com", "eightchars")
+    email_user, _ = use_cases.register_user.execute("Person@Example.com", "eightchars")
 
-    linked_user, _ = service.sign_in_with_google(
+    linked_user, _ = use_cases.sign_in_with_google.execute(
         GoogleProfile(subject="google-subject", email="PERSON@example.com", email_verified=True)
     )
 
@@ -174,10 +192,10 @@ def test_links_a_verified_google_identity_to_normalized_email(
 
 
 def test_rejects_unverified_google_email_without_creating_a_user(
-    service: AuthApplicationService,
+    use_cases: AuthUseCases,
 ) -> None:
     with pytest.raises(InvalidCredentialsError):
-        service.sign_in_with_google(
+        use_cases.sign_in_with_google.execute(
             GoogleProfile(
                 subject="google-subject", email="person@example.com", email_verified=False
             )

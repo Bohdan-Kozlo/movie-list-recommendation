@@ -1,19 +1,19 @@
 from datetime import date
+from types import SimpleNamespace
 
 from app.main import app
-from app.modules.catalog.api import get_catalogue_service
-from app.modules.catalog.service import (
+from app.modules.catalog.dependencies import get_catalogue_use_cases
+from app.modules.catalog.domain import (
     CatalogueFacets,
     CataloguePage,
     CatalogueQuery,
-    CatalogueService,
     TitleDetails,
     TitleSummary,
 )
 from fastapi.testclient import TestClient
 
 
-class FakeCatalogueService(CatalogueService):
+class FakeCatalogueService:
     def search(self, query: CatalogueQuery) -> CataloguePage:
         assert query.title_query == "dune"
         assert query.title_type == "movie"
@@ -72,7 +72,7 @@ def _dune_summary() -> TitleSummary:
 
 
 def test_visitors_can_search_filter_and_paginate_catalogue_titles() -> None:
-    app.dependency_overrides[get_catalogue_service] = lambda: FakeCatalogueService()
+    app.dependency_overrides[get_catalogue_use_cases] = _use_cases
 
     response = TestClient(app).get(
         "/catalogue/titles",
@@ -109,7 +109,7 @@ def test_visitors_can_search_filter_and_paginate_catalogue_titles() -> None:
 
 
 def test_visitors_can_open_title_details_and_catalogue_facets() -> None:
-    app.dependency_overrides[get_catalogue_service] = lambda: FakeCatalogueService()
+    app.dependency_overrides[get_catalogue_use_cases] = _use_cases
 
     detail_response = TestClient(app).get("/catalogue/titles/dune-id")
     facet_response = TestClient(app).get("/catalogue/filters")
@@ -126,3 +126,12 @@ def test_visitors_can_open_title_details_and_catalogue_facets() -> None:
         "languages": ["en"],
         "years": [2021],
     }
+
+
+def _use_cases() -> SimpleNamespace:
+    service = FakeCatalogueService()
+    return SimpleNamespace(
+        search_catalogue=SimpleNamespace(execute=service.search),
+        get_title_details=SimpleNamespace(execute=service.details),
+        get_catalogue_facets=SimpleNamespace(execute=service.facets),
+    )

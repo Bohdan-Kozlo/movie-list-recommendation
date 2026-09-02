@@ -1,0 +1,112 @@
+"""HTTP DTOs and centralized mapping for catalogue routes."""
+
+from pydantic import BaseModel, ConfigDict, Field
+
+from app.modules.catalog.domain import (
+    CatalogueFacets,
+    CataloguePage,
+    CatalogueQuery,
+    TitleDetails,
+    TitleSummary,
+)
+
+
+class TitleSummaryResponse(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    id: str
+    title: str
+    title_type: str = Field(serialization_alias="type")
+    release_date: str | None = Field(serialization_alias="releaseDate")
+    original_language: str = Field(serialization_alias="originalLanguage")
+    poster_path: str | None = Field(serialization_alias="posterPath")
+    popularity: float
+    genres: list[str]
+
+
+class CataloguePageResponse(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    items: list[TitleSummaryResponse]
+    total: int
+    page: int
+    page_size: int = Field(serialization_alias="pageSize")
+
+
+class TitleDetailsResponse(TitleSummaryResponse):
+    runtime_minutes: int | None = Field(serialization_alias="runtimeMinutes")
+    overview: str | None
+    backdrop_path: str | None = Field(serialization_alias="backdropPath")
+    vote_average: float | None = Field(serialization_alias="voteAverage")
+    tagline: str | None
+    cast: list[dict[str, str]]
+    creators: list[str]
+    keywords: list[str]
+
+
+class CatalogueFacetsResponse(BaseModel):
+    genres: list[str]
+    languages: list[str]
+    years: list[int]
+
+
+def to_catalogue_query(
+    title_query: str | None,
+    title_type: str | None,
+    genre: str | None,
+    language: str | None,
+    year: int | None,
+    page: int,
+) -> CatalogueQuery:
+    return CatalogueQuery(
+        title_query=title_query,
+        title_type=title_type,
+        genre=genre,
+        language=language,
+        year=year,
+        page=page,
+    )
+
+
+def to_summary_response(title: TitleSummary) -> TitleSummaryResponse:
+    return TitleSummaryResponse(
+        id=title.id,
+        title=title.title,
+        title_type=title.title_type,
+        release_date=title.release_date.isoformat() if title.release_date else None,
+        original_language=title.original_language,
+        poster_path=title.poster_path,
+        popularity=title.popularity,
+        genres=title.genres,
+    )
+
+
+def to_page_response(page: CataloguePage) -> CataloguePageResponse:
+    return CataloguePageResponse(
+        items=[to_summary_response(title) for title in page.items],
+        total=page.total,
+        page=page.page,
+        page_size=page.page_size,
+    )
+
+
+def to_details_response(title: TitleDetails) -> TitleDetailsResponse:
+    return TitleDetailsResponse(
+        **to_summary_response(title).model_dump(),
+        overview=title.overview,
+        runtime_minutes=title.runtime_minutes,
+        backdrop_path=title.backdrop_path,
+        vote_average=title.vote_average,
+        tagline=title.tagline,
+        cast=title.cast,
+        creators=title.creators,
+        keywords=title.keywords,
+    )
+
+
+def to_facets_response(facets: CatalogueFacets) -> CatalogueFacetsResponse:
+    return CatalogueFacetsResponse(
+        genres=facets.genres,
+        languages=facets.languages,
+        years=facets.years,
+    )

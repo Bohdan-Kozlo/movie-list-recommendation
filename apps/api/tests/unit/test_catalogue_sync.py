@@ -1,10 +1,10 @@
 from dataclasses import replace
 from datetime import date
 
-from app.adapters.catalogue_repository import SqlAlchemyCatalogueRepository
-from app.modules.catalog.application import CatalogueApplicationService
+from app.adapters.postgres.catalogue_repository import SqlAlchemyCatalogueRepository
 from app.modules.catalog.models import Base, CatalogueTitle, ExternalIdentifier
 from app.modules.catalog.sync import SyncedGenre, SyncedTitle
+from app.modules.catalog.use_cases import SynchronizeCatalogue
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
 
@@ -50,11 +50,11 @@ class FakeCatalogueRepository:
 
 
 def test_repeat_catalogue_sync_updates_existing_normalized_tmdb_records() -> None:
-    service = CatalogueApplicationService(FakeCatalogueRepository())
+    use_case = SynchronizeCatalogue(FakeCatalogueRepository())
     gateway = FakeTmdbGateway()
 
-    first_report = service.synchronize(gateway, ["movie"], pages=1)
-    second_report = service.synchronize(gateway, ["movie"], pages=1)
+    first_report = use_case.execute(gateway, ["movie"], pages=1)
+    second_report = use_case.execute(gateway, ["movie"], pages=1)
 
     assert first_report.created == 1
     assert first_report.updated == 0

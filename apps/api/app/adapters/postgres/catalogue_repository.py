@@ -5,14 +5,9 @@ from uuid import UUID
 from sqlalchemy import Engine, Select, func, select
 from sqlalchemy.orm import Session, selectinload
 
+from app.adapters.postgres.mappers.catalogue import to_title_details, to_title_summary
+from app.modules.catalog.domain import CatalogueFacets, CataloguePage, CatalogueQuery, TitleDetails
 from app.modules.catalog.models import CatalogueTitle, ExternalIdentifier, Genre
-from app.modules.catalog.service import (
-    CatalogueFacets,
-    CataloguePage,
-    CatalogueQuery,
-    TitleDetails,
-    TitleSummary,
-)
 from app.modules.catalog.sync import SyncedTitle
 
 
@@ -23,7 +18,6 @@ class SqlAlchemyCatalogueRepository:
         self._engine = engine
 
     def search(self, query: CatalogueQuery) -> CataloguePage:
-        """Find a popularity-ordered page of matching local titles."""
         statement = self._filtered_titles(query).order_by(
             CatalogueTitle.popularity.desc(), CatalogueTitle.title.asc()
         )
@@ -35,14 +29,13 @@ class SqlAlchemyCatalogueRepository:
                 .limit(query.page_size)
             ).all()
         return CataloguePage(
-            items=[self._summary(title) for title in titles],
+            items=[to_title_summary(title) for title in titles],
             total=total,
             page=query.page,
             page_size=query.page_size,
         )
 
     def details(self, title_id: str) -> TitleDetails | None:
-        """Load a single title from its stable canonical identifier."""
         try:
             canonical_id = UUID(title_id)
         except ValueError:
@@ -53,22 +46,9 @@ class SqlAlchemyCatalogueRepository:
                 .where(CatalogueTitle.id == canonical_id)
                 .options(selectinload(CatalogueTitle.genres))
             )
-            if title is None:
-                return None
-            return TitleDetails(
-                **self._summary(title).__dict__,
-                overview=title.overview,
-                runtime_minutes=title.runtime_minutes,
-                backdrop_path=title.backdrop_path,
-                vote_average=title.vote_average,
-                tagline=title.tagline,
-                cast=title.cast,
-                creators=title.creators,
-                keywords=title.keywords,
-            )
+            return to_title_details(title) if title is not None else None
 
     def facets(self) -> CatalogueFacets:
-        """Return all locally available filter values."""
         with Session(self._engine) as session:
             genres = list(session.scalars(select(Genre.name).order_by(Genre.name)).all())
             languages = list(
@@ -93,7 +73,6 @@ class SqlAlchemyCatalogueRepository:
         )
 
     def upsert(self, synced_title: SyncedTitle) -> bool:
-        """Insert or update one title by its TMDB identifier."""
         provider = f"tmdb_{synced_title.title_type}"
         external_value = normalize_external_id(provider, str(synced_title.tmdb_id))
         with Session(self._engine) as session, session.begin():
@@ -157,19 +136,6 @@ class SqlAlchemyCatalogueRepository:
         if query.year:
             statement = statement.where(CatalogueTitle.release_year == query.year)
         return statement
-
-    @staticmethod
-    def _summary(title: CatalogueTitle) -> TitleSummary:
-        return TitleSummary(
-            id=str(title.id),
-            title=title.title,
-            title_type=title.title_type,
-            release_date=title.release_date,
-            original_language=title.original_language,
-            poster_path=title.poster_path,
-            popularity=title.popularity,
-            genres=[genre.name for genre in sorted(title.genres, key=lambda item: item.name)],
-        )
 
     @staticmethod
     def _genres(session: Session, synced_title: SyncedTitle) -> list[Genre]:

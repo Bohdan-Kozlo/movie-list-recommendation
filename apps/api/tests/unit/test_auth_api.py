@@ -1,9 +1,11 @@
 from datetime import UTC, datetime, timedelta
+from types import SimpleNamespace
 from uuid import uuid4
 
 from app.main import app
-from app.modules.auth.api import get_auth_service, get_google_provider
-from app.modules.auth.application import (
+from app.modules.auth.api import get_google_provider
+from app.modules.auth.dependencies import get_auth_use_cases
+from app.modules.auth.domain import (
     DuplicateEmailError,
     GoogleProfile,
     InvalidCredentialsError,
@@ -40,12 +42,19 @@ class FakeAuthService:
             raise InvalidCredentialsError
         return self.user
 
-    def logout(self, access_token: str) -> None:
+    def logout(self, access_token: str | None, refresh_token: str | None) -> None:
+        if access_token is not None:
+            self._logout_with_access_token(access_token)
+            return
+        if refresh_token is not None:
+            self._logout_with_refresh_token(refresh_token)
+
+    def _logout_with_access_token(self, access_token: str) -> None:
         if access_token != "access":
             raise InvalidCredentialsError
         self.logged_out = True
 
-    def logout_with_refresh(self, refresh_token: str) -> None:
+    def _logout_with_refresh_token(self, refresh_token: str) -> None:
         if refresh_token != "refresh":
             raise InvalidCredentialsError
         self.logged_out = True
@@ -77,7 +86,14 @@ def configured_client(monkeypatch) -> tuple[TestClient, FakeAuthService]:
     monkeypatch.setenv("GOOGLE_REDIRECT_URI", "http://localhost:8000/auth/google/callback")
     monkeypatch.setenv("WEB_APP_URL", "http://localhost:5173")
     service = FakeAuthService()
-    app.dependency_overrides[get_auth_service] = lambda: service
+    app.dependency_overrides[get_auth_use_cases] = lambda: SimpleNamespace(
+        register_user=SimpleNamespace(execute=service.register),
+        login_user=SimpleNamespace(execute=service.login),
+        refresh_session=SimpleNamespace(execute=service.refresh),
+        logout_session=SimpleNamespace(execute=service.logout),
+        get_current_user=SimpleNamespace(execute=service.current_user),
+        sign_in_with_google=SimpleNamespace(execute=service.sign_in_with_google),
+    )
     app.dependency_overrides[get_google_provider] = FakeGoogleProvider
     return TestClient(app), service
 

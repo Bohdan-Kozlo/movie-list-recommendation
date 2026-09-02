@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass
 from datetime import date
-from typing import Protocol
 
 
 @dataclass(frozen=True)
@@ -35,13 +34,3 @@ class SyncedTitle:
     keywords: list[str]
     genres: list[SyncedGenre]
     imdb_id: str | None
-
-
-class CatalogueMetadataGateway(Protocol):
-    """Provider boundary for repeatable catalogue synchronization."""
-
-    def popular_ids(self, title_type: str, page: int) -> list[int]:
-        """Return a page of popular English title IDs."""
-
-    def title_details(self, title_type: str, tmdb_id: int) -> SyncedTitle:
-        """Return complete current metadata for a provider title."""

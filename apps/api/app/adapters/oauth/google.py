@@ -7,7 +7,8 @@ from authlib.integrations.base_client.errors import OAuthError  # type: ignore[i
 from authlib.integrations.starlette_client import OAuth  # type: ignore[import-untyped]
 from fastapi import Request
 
-from app.modules.auth.application import GoogleProfile, InvalidCredentialsError
+from app.adapters.oauth.mappers import to_google_profile
+from app.modules.auth.domain import GoogleProfile, InvalidCredentialsError
 
 
 class GoogleOAuthClient:
@@ -34,16 +35,7 @@ class GoogleOAuthClient:
             raise InvalidCredentialsError from error
         if not isinstance(userinfo, dict):
             raise InvalidCredentialsError
-        subject = userinfo.get("sub")
-        email = userinfo.get("email")
-        verified = userinfo.get("email_verified")
-        if (
-            not isinstance(subject, str)
-            or not isinstance(email, str)
-            or not isinstance(verified, bool)
-        ):
-            raise InvalidCredentialsError
-        return GoogleProfile(subject=subject, email=email, email_verified=verified)
+        return to_google_profile(userinfo)
 
     @property
     def _client(self) -> Any:

@@ -1,8 +1,7 @@
-"""Public catalogue application service contracts."""
+"""Domain values shared by catalogue use cases and ports."""
 
 from dataclasses import dataclass
 from datetime import date
-from typing import Protocol
 
 
 @dataclass(frozen=True)
@@ -63,16 +62,3 @@ class CatalogueFacets:
     genres: list[str]
     languages: list[str]
     years: list[int]
-
-
-class CatalogueService(Protocol):
-    """The catalogue module interface used by HTTP routes and CLI workflows."""
-
-    def search(self, query: CatalogueQuery) -> CataloguePage:
-        """Return canonical titles matching the visitor's browse criteria."""
-
-    def details(self, title_id: str) -> TitleDetails | None:
-        """Return one canonical title or no match."""
-
-    def facets(self) -> CatalogueFacets:
-        """Return current catalogue filter values."""
