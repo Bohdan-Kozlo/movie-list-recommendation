@@ -2,10 +2,9 @@
 
 from uuid import UUID
 
-from sqlalchemy import Engine, Select, create_engine, func, select
+from sqlalchemy import Engine, Select, func, select
 from sqlalchemy.orm import Session, selectinload
 
-from app.core.config import sqlalchemy_database_url
 from app.modules.catalog.models import CatalogueTitle, ExternalIdentifier, Genre
 from app.modules.catalog.service import (
     CatalogueFacets,
@@ -15,11 +14,6 @@ from app.modules.catalog.service import (
     TitleSummary,
 )
 from app.modules.catalog.sync import SyncedTitle
-
-
-def create_catalogue_engine(database_url: str) -> Engine:
-    """Create the synchronous engine used by FastAPI worker-thread endpoints."""
-    return create_engine(sqlalchemy_database_url(database_url), pool_pre_ping=True)
 
 
 class SqlAlchemyCatalogueRepository:

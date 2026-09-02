@@ -9,6 +9,7 @@ import {
   posterUrl,
 } from './api'
 import { CatalogueMessage } from './CatalogueMessage'
+import { AccountMenu } from '../auth/AccountMenu'
 
 const initialParameters: BrowseParameters = {
   query: '',
@@ -21,9 +22,10 @@ const initialParameters: BrowseParameters = {
 
 type CataloguePageProps = {
   onOpenTitle: (titleId: string) => void
+  onNavigate: (path: string) => void
 }
 
-export function CataloguePage({ onOpenTitle }: CataloguePageProps) {
+export function CataloguePage({ onOpenTitle, onNavigate }: CataloguePageProps) {
   const [parameters, setParameters] = useState(initialParameters)
   const [searchDraft, setSearchDraft] = useState('')
   const catalogueQuery = useQuery({
@@ -56,7 +58,7 @@ export function CataloguePage({ onOpenTitle }: CataloguePageProps) {
         <a className="wordmark" href="/catalogue" onClick={(event) => { event.preventDefault(); resetFilters() }}>
           REEL / INDEX
         </a>
-        <p className="masthead-note">English films &amp; series · selected by signal</p>
+        <div className="masthead-right"><p className="masthead-note">English films &amp; series · selected by signal</p><AccountMenu onNavigate={onNavigate} /></div>
       </header>
 
       <section className="catalogue-intro" aria-labelledby="catalogue-title">

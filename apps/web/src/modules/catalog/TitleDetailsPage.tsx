@@ -2,13 +2,15 @@ import { useQuery } from '@tanstack/react-query'
 
 import { fetchCatalogueTitle, posterUrl } from './api'
 import { CatalogueMessage } from './CatalogueMessage'
+import { AccountMenu } from '../auth/AccountMenu'
 
 type TitleDetailsPageProps = {
   titleId: string
   onBack: () => void
+  onNavigate: (path: string) => void
 }
 
-export function TitleDetailsPage({ titleId, onBack }: TitleDetailsPageProps) {
+export function TitleDetailsPage({ titleId, onBack, onNavigate }: TitleDetailsPageProps) {
   const titleQuery = useQuery({ queryKey: ['catalogue', 'title', titleId], queryFn: () => fetchCatalogueTitle(titleId) })
   if (titleQuery.isLoading) return <main className="catalogue-shell"><div className="detail-loading">Loading title…</div></main>
   if (titleQuery.isError || !titleQuery.data) return <main className="catalogue-shell"><button className="back-link" onClick={onBack}>← Back to catalogue</button><CatalogueMessage title="This title is unavailable" body="Return to the catalogue and choose another title." /></main>
@@ -19,7 +21,7 @@ export function TitleDetailsPage({ titleId, onBack }: TitleDetailsPageProps) {
   return (
     <main className="detail-page">
       <div className="detail-backdrop" style={backdrop ? { backgroundImage: `linear-gradient(90deg, #111114 8%, rgba(17,17,20,.82) 42%, rgba(17,17,20,.24)), url(${backdrop})` } : undefined}>
-        <header className="masthead"><button className="wordmark" onClick={onBack}>REEL / INDEX</button><button className="back-link" onClick={onBack}>← Catalogue</button></header>
+        <header className="masthead"><button className="wordmark" onClick={onBack}>REEL / INDEX</button><div className="masthead-right"><AccountMenu onNavigate={onNavigate} /><button className="back-link" onClick={onBack}>← Catalogue</button></div></header>
         <section className="detail-hero">
           <div className="detail-poster">{poster ? <img src={poster} alt="" /> : <span className="poster-fallback">No image<br />available</span>}</div>
           <div className="detail-copy">

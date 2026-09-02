@@ -18,3 +18,9 @@ uv run recsys catalog sync
 ```
 
 The sync imports five popularity-sorted discovery pages each for English movies and TV series. Re-running it updates the existing canonical records rather than creating duplicates.
+
+## Authentication development
+
+Set `AUTH_JWT_SECRET` and `AUTH_SESSION_SECRET` to long random values in `.env`. For Google sign-in, create a Google OpenID Connect web client and configure `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and the exact `GOOGLE_REDIRECT_URI` registered with Google (locally, `http://localhost:8000/auth/google/callback`).
+
+Apply the authentication migration with the existing Alembic command. The SPA uses HttpOnly access and refresh cookies; set `AUTH_COOKIE_SECURE=true` when it is served over HTTPS.

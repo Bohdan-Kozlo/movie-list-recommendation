@@ -29,17 +29,17 @@ def main() -> None:
         sys.path.insert(0, str(API_SOURCE_ROOT))
         from app.adapters.catalogue_repository import (
             SqlAlchemyCatalogueRepository,
-            create_catalogue_engine,
         )
         from app.adapters.tmdb import TmdbClient
         from app.core.config import Settings
+        from app.core.database import create_database_engine
         from app.modules.catalog.application import CatalogueApplicationService
 
         settings = Settings.from_environment()
         gateway = TmdbClient(settings.require_tmdb_api_key(), settings.tmdb_base_url)
         title_types = ["movie", "tv"] if arguments.title_type == "all" else [arguments.title_type]
         service = CatalogueApplicationService(
-            SqlAlchemyCatalogueRepository(create_catalogue_engine(settings.database_url))
+            SqlAlchemyCatalogueRepository(create_database_engine(settings.database_url))
         )
         report = service.synchronize(gateway, title_types, arguments.pages)
         print(json.dumps({"created": report.created, "updated": report.updated}))

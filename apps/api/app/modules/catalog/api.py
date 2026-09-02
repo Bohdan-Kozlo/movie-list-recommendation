@@ -6,8 +6,9 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.adapters.catalogue_repository import SqlAlchemyCatalogueRepository, create_catalogue_engine
+from app.adapters.catalogue_repository import SqlAlchemyCatalogueRepository
 from app.core.config import Settings
+from app.core.database import create_database_engine
 from app.modules.catalog.application import CatalogueApplicationService
 from app.modules.catalog.service import (
     CatalogueFacets,
@@ -78,7 +79,7 @@ def get_catalogue_service() -> CatalogueService:
 def configured_catalogue_service(database_url: str) -> CatalogueApplicationService:
     """Reuse one PostgreSQL engine for the active application configuration."""
     return CatalogueApplicationService(
-        SqlAlchemyCatalogueRepository(create_catalogue_engine(database_url))
+        SqlAlchemyCatalogueRepository(create_database_engine(database_url))
     )
 
 

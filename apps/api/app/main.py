@@ -2,18 +2,34 @@ from os import getenv
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.sessions import SessionMiddleware
 
+from app.modules.auth.api import router as auth_router
 from app.modules.catalog.api import router as catalogue_router
+
+app_environment = getenv("APP_ENV", "development")
+oauth_state_secret = getenv("AUTH_SESSION_SECRET")
+if not oauth_state_secret:
+    if app_environment != "development":
+        raise RuntimeError("AUTH_SESSION_SECRET must be configured outside development.")
+    oauth_state_secret = "development-only-oauth-state-secret"
 
 app = FastAPI(title="Movie List Recommendation API")
 app.add_middleware(
+    SessionMiddleware,
+    secret_key=oauth_state_secret,
+    https_only=getenv("AUTH_COOKIE_SECURE", "false").lower() == "true",
+    same_site="lax",
+)
+app.add_middleware(
     CORSMiddleware,
     allow_origins=getenv("WEB_ORIGINS", "http://localhost:5173").split(","),
-    allow_credentials=False,
-    allow_methods=["GET"],
-    allow_headers=[],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type"],
 )
 app.include_router(catalogue_router)
+app.include_router(auth_router)
 
 
 @app.get("/health")

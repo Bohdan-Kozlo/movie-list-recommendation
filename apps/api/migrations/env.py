@@ -11,7 +11,9 @@ from sqlalchemy import engine_from_config, pool
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.core.config import sqlalchemy_database_url  # noqa: E402
-from app.modules.catalog.models import Base  # noqa: E402
+from app.core.database import Base  # noqa: E402
+from app.modules.auth import models as auth_models  # noqa: F401, E402
+from app.modules.catalog import models as catalogue_models  # noqa: F401, E402
 
 config = context.config
 if config.config_file_name is not None:

@@ -18,12 +18,9 @@ from sqlalchemy import (
     UniqueConstraint,
     func,
 )
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-
-class Base(DeclarativeBase):
-    """Shared declarative base for application-owned database tables."""
-
+from app.core.database import Base
 
 title_genres = Table(
     "catalogue_title_genres",
