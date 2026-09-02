@@ -21,6 +21,18 @@ export async function apiRequest<T>(path: string, init: RequestInit = {}): Promi
   return response.json() as Promise<T>
 }
 
+export async function authenticatedApiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
+  try {
+    return await apiRequest<T>(path, init)
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 401) {
+      await apiRequest('/auth/refresh', { method: 'POST' })
+      return apiRequest<T>(path, init)
+    }
+    throw error
+  }
+}
+
 async function errorMessage(response: Response): Promise<string> {
   const payload = await response.json().catch(() => null) as { detail?: unknown } | null
   return typeof payload?.detail === 'string' ? payload.detail : 'The request could not be completed.'

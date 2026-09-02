@@ -1,3 +1,5 @@
+import { ApiError, apiRequest, apiUrl, authenticatedApiRequest } from '../../shared/api/client'
+
 export type AuthenticatedUser = {
   id: string
   email: string
@@ -13,9 +15,9 @@ export async function login(email: string, password: string): Promise<Authentica
 
 export async function fetchCurrentUser(): Promise<AuthenticatedUser | null> {
   try {
-    return await apiRequest<AuthenticatedUser>('/auth/me')
+    return await authenticatedApiRequest<AuthenticatedUser>('/auth/me')
   } catch (error) {
-    if (error instanceof ApiError && error.status === 401) return refreshCurrentUser()
+    if (error instanceof ApiError && error.status === 401) return null
     throw new Error('Account status is unavailable.')
   }
 }
@@ -26,15 +28,6 @@ export async function logout(): Promise<void> {
 
 export function beginGoogleLogin() {
   window.location.assign(apiUrl('/auth/google/login'))
-}
-
-async function refreshCurrentUser(): Promise<AuthenticatedUser | null> {
-  try {
-    return await apiRequest<AuthenticatedUser>('/auth/refresh', { method: 'POST' })
-  } catch (error) {
-    if (error instanceof ApiError && error.status === 401) return null
-    throw new Error('Account status is unavailable.')
-  }
 }
 
 async function sendCredentials(
@@ -57,4 +50,3 @@ async function authRequest<T>(path: string, init: RequestInit): Promise<T> {
     throw new Error('Authentication is unavailable. Please try again.')
   }
 }
-import { ApiError, apiRequest, apiUrl } from '../../shared/api/client'

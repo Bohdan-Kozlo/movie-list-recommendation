@@ -7,7 +7,12 @@ from fastapi.responses import RedirectResponse
 
 from app.adapters.oauth.google import GoogleOAuthClient
 from app.core.config import Settings
-from app.modules.auth.dependencies import AuthUseCases, get_auth_use_cases
+from app.modules.auth.dependencies import (
+    AuthUseCases,
+    authentication_required,
+    get_auth_use_cases,
+    get_current_user,
+)
 from app.modules.auth.domain import (
     DuplicateEmailError,
     GoogleProfile,
@@ -36,18 +41,6 @@ def get_google_provider() -> GoogleOAuthClient:
     return GoogleOAuthClient(
         settings.require_google_client_id(), settings.require_google_client_secret()
     )
-
-
-def get_current_user(
-    use_cases: Annotated[AuthUseCases, Depends(get_auth_use_cases)],
-    access_token: Annotated[str | None, Cookie()] = None,
-) -> User:
-    if access_token is None:
-        raise authentication_required()
-    try:
-        return use_cases.get_current_user.execute(access_token)
-    except InvalidCredentialsError as error:
-        raise authentication_required() from error
 
 
 @router.post(
@@ -174,9 +167,3 @@ def clear_session_cookies(response: Response, settings: Settings) -> None:
             samesite="lax",
             path="/",
         )
-
-
-def authentication_required() -> HTTPException:
-    return HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required."
-    )

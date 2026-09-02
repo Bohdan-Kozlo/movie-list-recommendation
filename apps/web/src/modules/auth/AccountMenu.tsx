@@ -16,6 +16,9 @@ export function AccountMenu() {
     return (
       <div className="account-menu">
         <span>{accountQuery.data.email}</span>
+        <Button asChild variant="ghost" size="compact">
+          <Link to="/library/watchlist">My library</Link>
+        </Button>
         <Button variant="ghost" size="compact" type="button" onClick={() => logoutMutation.mutate()}>
           Sign out
         </Button>

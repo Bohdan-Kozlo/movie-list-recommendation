@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router'
 import { fetchCatalogueTitle, posterUrl } from './api'
 import { CatalogueMessage } from './CatalogueMessage'
 import { AccountMenu } from '../auth/AccountMenu'
+import { InteractionControls } from '../interactions/InteractionControls'
 
 export function TitleDetailsPage() {
   const navigate = useNavigate()
@@ -34,6 +35,7 @@ export function TitleDetailsPage() {
             <p className="metadata">{title.genres.join(' · ')} {title.runtimeMinutes ? `· ${title.runtimeMinutes} min` : ''} {title.voteAverage ? `· ${title.voteAverage.toFixed(1)} / 10` : ''}</p>
             <p className="overview">{title.overview || 'No overview is available for this title.'}</p>
             {title.creators.length > 0 && <p className="credit"><strong>{title.type === 'movie' ? 'Director' : 'Created by'}</strong> {title.creators.join(', ')}</p>}
+            <InteractionControls titleId={title.id} />
           </div>
         </section>
       </div>

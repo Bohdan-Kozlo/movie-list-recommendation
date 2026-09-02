@@ -2,10 +2,14 @@
 
 from dataclasses import dataclass
 from functools import lru_cache
+from typing import Annotated
+
+from fastapi import Cookie, Depends, HTTPException
 
 from app.adapters.postgres.auth_repository import SqlAlchemyAuthRepository
 from app.core.config import Settings
 from app.core.database import create_database_engine
+from app.modules.auth.domain import InvalidCredentialsError, User
 from app.modules.auth.security import Argon2PasswordManager, JwtTokenManager
 from app.modules.auth.use_cases import (
     GetCurrentUser,
@@ -30,6 +34,22 @@ class AuthUseCases:
 def get_auth_use_cases() -> AuthUseCases:
     settings = Settings.from_environment()
     return configured_auth_use_cases(settings.database_url, settings.require_auth_jwt_secret())
+
+
+def get_current_user(
+    use_cases: Annotated[AuthUseCases, Depends(get_auth_use_cases)],
+    access_token: Annotated[str | None, Cookie()] = None,
+) -> User:
+    if access_token is None:
+        raise authentication_required()
+    try:
+        return use_cases.get_current_user.execute(access_token)
+    except InvalidCredentialsError as error:
+        raise authentication_required() from error
+
+
+def authentication_required() -> HTTPException:
+    return HTTPException(status_code=401, detail="Authentication required.")
 
 
 @lru_cache

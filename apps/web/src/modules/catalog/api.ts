@@ -1,13 +1,8 @@
-export type CatalogueTitle = {
-  id: string
-  title: string
-  type: 'movie' | 'tv'
-  releaseDate: string | null
-  originalLanguage: string
-  posterPath: string | null
-  popularity: number
-  genres: string[]
-}
+import { ApiError, apiRequest } from '../../shared/api/client'
+import { posterUrl, type TitleCard } from '../../shared/catalogue'
+
+export type CatalogueTitle = TitleCard
+export { posterUrl }
 
 export type CataloguePage = {
   items: CatalogueTitle[]
@@ -60,10 +55,6 @@ export function fetchCatalogueTitle(titleId: string): Promise<CatalogueTitleDeta
   return catalogueRequest<CatalogueTitleDetails>(`/catalogue/titles/${titleId}`)
 }
 
-export function posterUrl(path: string | null, size = 'w500'): string | null {
-  return path ? `https://image.tmdb.org/t/p/${size}${path}` : null
-}
-
 async function catalogueRequest<T>(path: string): Promise<T> {
   try {
     return await apiRequest<T>(path)
@@ -74,4 +65,3 @@ async function catalogueRequest<T>(path: string): Promise<T> {
     throw new Error('Catalogue unavailable.')
   }
 }
-import { ApiError, apiRequest } from '../../shared/api/client'
