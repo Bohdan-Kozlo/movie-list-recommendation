@@ -1,6 +1,27 @@
 @import "tailwindcss";
 
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+}
+
 :root {
+  --background: #e9e7df;
+  --foreground: #181718;
+  --card: #f6f4ed;
+  --card-foreground: #181718;
+  --primary: #181718;
+  --primary-foreground: #f6f4ed;
+  --muted-foreground: #67645e;
+  --border: #aaa79d;
+  --ring: #ec5b31;
   color: #181718;
   background: #e9e7df;
   font-family: "Gill Sans", "Trebuchet MS", sans-serif;

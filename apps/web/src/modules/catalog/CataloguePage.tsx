@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { FormEvent, useMemo, useState } from 'react'
+import { Link, useNavigate } from 'react-router'
 
 import {
   BrowseParameters,
@@ -20,12 +21,8 @@ const initialParameters: BrowseParameters = {
   page: 1,
 }
 
-type CataloguePageProps = {
-  onOpenTitle: (titleId: string) => void
-  onNavigate: (path: string) => void
-}
-
-export function CataloguePage({ onOpenTitle, onNavigate }: CataloguePageProps) {
+export function CataloguePage() {
+  const navigate = useNavigate()
   const [parameters, setParameters] = useState(initialParameters)
   const [searchDraft, setSearchDraft] = useState('')
   const catalogueQuery = useQuery({
@@ -55,10 +52,10 @@ export function CataloguePage({ onOpenTitle, onNavigate }: CataloguePageProps) {
   return (
     <main className="catalogue-shell">
       <header className="masthead">
-        <a className="wordmark" href="/catalogue" onClick={(event) => { event.preventDefault(); resetFilters() }}>
+        <Link className="wordmark" to="/catalogue" onClick={resetFilters}>
           REEL / INDEX
-        </a>
-        <div className="masthead-right"><p className="masthead-note">English films &amp; series · selected by signal</p><AccountMenu onNavigate={onNavigate} /></div>
+        </Link>
+        <div className="masthead-right"><p className="masthead-note">English films &amp; series · selected by signal</p><AccountMenu /></div>
       </header>
 
       <section className="catalogue-intro" aria-labelledby="catalogue-title">
@@ -126,7 +123,7 @@ export function CataloguePage({ onOpenTitle, onNavigate }: CataloguePageProps) {
         {catalogueQuery.data?.items.length === 0 && <CatalogueMessage title="No titles match these filters" body="Broaden a filter or search for another title." />}
         {catalogueQuery.data && catalogueQuery.data.items.length > 0 && (
           <div className="title-grid">
-            {catalogueQuery.data.items.map((title) => <TitleCard key={title.id} title={title} onOpen={onOpenTitle} />)}
+            {catalogueQuery.data.items.map((title) => <TitleCard key={title.id} title={title} onOpen={(id) => navigate(`/catalogue/${id}`)} />)}
           </div>
         )}
       </section>

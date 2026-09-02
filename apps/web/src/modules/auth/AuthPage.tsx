@@ -1,14 +1,18 @@
 import { FormEvent, useEffect, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { Link, useNavigate } from 'react-router'
 
+import { Button } from '../../shared/ui/Button'
+import { Card } from '../../shared/ui/Card'
+import { Input } from '../../shared/ui/Input'
 import { beginGoogleLogin, fetchCurrentUser, login, register } from './api'
 
 type AuthPageProps = {
   mode: 'sign-in' | 'register'
-  onNavigate: (path: string) => void
 }
 
-export function AuthPage({ mode, onNavigate }: AuthPageProps) {
+export function AuthPage({ mode }: AuthPageProps) {
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -17,7 +21,7 @@ export function AuthPage({ mode, onNavigate }: AuthPageProps) {
     mutationFn: () => action(email, password),
     onSuccess: (user) => {
       queryClient.setQueryData(['auth', 'me'], user)
-      onNavigate('/catalogue')
+      navigate('/catalogue')
     },
   })
 
@@ -28,10 +32,12 @@ export function AuthPage({ mode, onNavigate }: AuthPageProps) {
 
   return (
     <main className="auth-page">
-      <section className="auth-panel" aria-labelledby="auth-title">
-        <button className="wordmark" type="button" onClick={() => onNavigate('/catalogue')}>
+      <Card className="auth-panel" aria-labelledby="auth-title">
+        <Button asChild className="wordmark" variant="ghost" size="compact">
+          <Link to="/catalogue">
           REEL / INDEX
-        </button>
+          </Link>
+        </Button>
         <p className="eyebrow">Your index</p>
         <h1 id="auth-title">{mode === 'register' ? 'Make your watchlist personal.' : 'Welcome back.'}</h1>
         <p className="auth-copy">
@@ -42,11 +48,11 @@ export function AuthPage({ mode, onNavigate }: AuthPageProps) {
         <form className="auth-form" onSubmit={submit}>
           <label>
             Email
-            <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
+            <Input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
           </label>
           <label>
             Password
-            <input
+            <Input
               type="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
@@ -55,34 +61,28 @@ export function AuthPage({ mode, onNavigate }: AuthPageProps) {
             />
           </label>
           {mutation.isError && <p className="auth-error">{mutation.error.message}</p>}
-          <button className="auth-submit" type="submit" disabled={mutation.isPending}>
+          <Button className="auth-submit" type="submit" disabled={mutation.isPending}>
             {mutation.isPending ? 'Working…' : mode === 'register' ? 'Create account' : 'Sign in'}
-          </button>
+          </Button>
         </form>
         <div className="auth-divider">or</div>
-        <button className="google-button" type="button" onClick={beginGoogleLogin}>
+        <Button className="google-button" variant="outline" type="button" onClick={beginGoogleLogin}>
           Continue with Google
-        </button>
+        </Button>
         <p className="auth-switch">
           {mode === 'register' ? 'Already have an account?' : 'New to Reel / Index?'}{' '}
-          <button
-            className="text-button"
-            type="button"
-            onClick={() => onNavigate(mode === 'register' ? '/auth/sign-in' : '/auth/register')}
-          >
+          <Button asChild className="text-button" variant="ghost" size="compact">
+            <Link to={mode === 'register' ? '/auth/sign-in' : '/auth/register'}>
             {mode === 'register' ? 'Sign in' : 'Create one'}
-          </button>
+            </Link>
+          </Button>
         </p>
-      </section>
+      </Card>
     </main>
   )
 }
 
-type AuthCallbackPageProps = {
-  onNavigate: (path: string) => void
-}
-
-export function AuthCallbackPage({ onNavigate }: AuthCallbackPageProps) {
+export function AuthCallbackPage() {
   const queryClient = useQueryClient()
   const [message, setMessage] = useState('Completing your sign-in…')
 
@@ -103,16 +103,20 @@ export function AuthCallbackPage({ onNavigate }: AuthCallbackPageProps) {
 
   return (
     <main className="auth-page">
-      <section className="auth-panel auth-callback">
-        <button className="wordmark" type="button" onClick={() => onNavigate('/catalogue')}>
+      <Card className="auth-panel auth-callback">
+        <Button asChild className="wordmark" variant="ghost" size="compact">
+          <Link to="/catalogue">
           REEL / INDEX
-        </button>
+          </Link>
+        </Button>
         <p className="eyebrow">Account</p>
         <h1>{message}</h1>
-        <button className="auth-submit" type="button" onClick={() => onNavigate('/catalogue')}>
+        <Button asChild className="auth-submit">
+          <Link to="/catalogue">
           Browse the catalogue
-        </button>
-      </section>
+          </Link>
+        </Button>
+      </Card>
     </main>
   )
 }
