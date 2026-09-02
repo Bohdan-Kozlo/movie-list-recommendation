@@ -42,8 +42,6 @@ export type BrowseParameters = {
   page: number
 }
 
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
-
 export async function fetchCatalogue(parameters: BrowseParameters): Promise<CataloguePage> {
   const searchParameters = new URLSearchParams({ page: String(parameters.page) })
   if (parameters.query) searchParameters.set('query', parameters.query)
@@ -51,25 +49,29 @@ export async function fetchCatalogue(parameters: BrowseParameters): Promise<Cata
   if (parameters.genre) searchParameters.set('genre', parameters.genre)
   if (parameters.language) searchParameters.set('language', parameters.language)
   if (parameters.year) searchParameters.set('year', parameters.year)
-  return request<CataloguePage>(`/catalogue/titles?${searchParameters}`)
+  return catalogueRequest<CataloguePage>(`/catalogue/titles?${searchParameters}`)
 }
 
 export function fetchCatalogueFilters(): Promise<CatalogueFilters> {
-  return request<CatalogueFilters>('/catalogue/filters')
+  return catalogueRequest<CatalogueFilters>('/catalogue/filters')
 }
 
 export function fetchCatalogueTitle(titleId: string): Promise<CatalogueTitleDetails> {
-  return request<CatalogueTitleDetails>(`/catalogue/titles/${titleId}`)
+  return catalogueRequest<CatalogueTitleDetails>(`/catalogue/titles/${titleId}`)
 }
 
 export function posterUrl(path: string | null, size = 'w500'): string | null {
   return path ? `https://image.tmdb.org/t/p/${size}${path}` : null
 }
 
-async function request<T>(path: string): Promise<T> {
-  const response = await fetch(`${apiBaseUrl}${path}`)
-  if (!response.ok) {
-    throw new Error(response.status === 404 ? 'This title is no longer in the catalogue.' : 'Catalogue unavailable.')
+async function catalogueRequest<T>(path: string): Promise<T> {
+  try {
+    return await apiRequest<T>(path)
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) {
+      throw new Error('This title is no longer in the catalogue.')
+    }
+    throw new Error('Catalogue unavailable.')
   }
-  return response.json() as Promise<T>
 }
+import { ApiError, apiRequest } from '../../shared/api/client'
