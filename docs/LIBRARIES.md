@@ -4,7 +4,7 @@
 
 | Tool or library | Purpose | Usage policy |
 |---|---|---|
-| uv | Python dependency management, environments, lockfile, and command execution | `pyproject.toml` and `uv.lock` are authoritative; use `uv run` for Python commands. |
+| uv | Python dependency management, environments, lockfile, command execution, and local package builds | `pyproject.toml` and `uv.lock` are authoritative; use `uv run` for Python commands and uv's built-in `uv_build` backend for the local `recsys` console package. |
 | FastAPI | REST application and OpenAPI documentation | Exposes the product interface; routers stay thin and delegate to vertical modules. |
 | LensKit | Collaborative filtering experiments and ranking evaluation support | Used with MovieLens latest-small; never mixes anonymous MovieLens users with product users. |
 | MLflow | Experiment tracking, artifacts, and model promotion | Every training and evaluation run records data identity, parameters, and ranking metrics. |

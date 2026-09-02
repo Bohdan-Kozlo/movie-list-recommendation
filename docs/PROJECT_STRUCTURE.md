@@ -40,7 +40,7 @@ movie-list-recommendation/
 ├── infra/                      # Dockerfiles and Docker Compose
 ├── .env.example
 ├── .gitignore
-├── .pre-commit-config.yaml
+├── .githooks/                  # tracked local quality hooks
 ├── pyproject.toml
 ├── uv.lock
 ├── pnpm-lock.yaml
@@ -82,5 +82,7 @@ The project has no Windows-specific wrapper scripts. The documented command surf
 - `pnpm run ...` for the Vite web application.
 - `docker compose ...` for containerized execution.
 - `recsys ...` for data and model lifecycle operations.
+
+Tracked hooks live under `.githooks/`; each clone enables them with `git config core.hooksPath .githooks`.
 
 The `recsys` interface owns diagnostics, catalogue synchronization, embedding generation, CF training, hybrid evaluation, and model promotion.

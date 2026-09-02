@@ -1,0 +1,47 @@
+[project]
+name = "movie-list-recommendation"
+version = "0.1.0"
+description = "A reproducible movie and TV-series recommendation system."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+  "fastapi[standard]>=0.115,<1.0",
+]
+
+[project.scripts]
+recsys = "recsys.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.12.7,<0.13"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+  "mypy>=1.13,<2.0",
+  "pytest>=8.3,<9.0",
+  "ruff>=0.8,<1.0",
+]
+ml = [
+  "lenskit>=2025.1",
+  "mlflow>=3.7,<4.0",
+]
+
+[tool.uv.build-backend]
+module-name = "recsys"
+module-root = "ml"
+
+[tool.pytest.ini_options]
+testpaths = ["apps/api/tests", "ml/tests"]
+pythonpath = ["apps/api"]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[tool.mypy]
+files = ["apps/api/app", "ml/recsys"]
+python_version = "3.13"
+strict = true

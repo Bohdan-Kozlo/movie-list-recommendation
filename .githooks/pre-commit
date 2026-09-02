@@ -1,0 +1,8 @@
+#!/bin/sh
+set -eu
+
+uv run --group dev --locked ruff format --check .
+uv run --group dev --locked ruff check .
+uv run --group dev --locked mypy
+pnpm --dir apps/web lint
+pnpm --dir apps/web typecheck
