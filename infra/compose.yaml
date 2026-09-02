@@ -50,7 +50,10 @@ services:
     profiles: ["full"]
     environment:
       APP_ENV: ${APP_ENV}
+      WEB_ORIGINS: ${WEB_ORIGINS}
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      TMDB_API_KEY: ${TMDB_API_KEY}
+      TMDB_BASE_URL: ${TMDB_BASE_URL}
       OLLAMA_BASE_URL: http://ollama:11434
       OLLAMA_EMBEDDING_MODEL: ${OLLAMA_EMBEDDING_MODEL}
       MLFLOW_TRACKING_URI: http://mlflow:5000
