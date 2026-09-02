@@ -1,3 +1,6 @@
+.scratch/
+docs/
+AGENTS.md
 .env
 .venv/
 __pycache__/
