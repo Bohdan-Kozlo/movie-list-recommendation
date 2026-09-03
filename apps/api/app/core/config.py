@@ -19,7 +19,9 @@ def load_environment(path: Path | None = None) -> None:
         key, separator, value = stripped.partition("=")
         if not separator or not key:
             continue
-        environ.setdefault(key.strip(), value.strip().strip("\"'"))
+        normalized_key = key.strip()
+        if not environ.get(normalized_key):
+            environ[normalized_key] = value.strip().strip("\"'")
 
 
 load_environment()
