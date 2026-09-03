@@ -1,13 +1,16 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { FormEvent, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 
 import {
   BrowseParameters,
   CatalogueTitle,
+  ExternalTitle,
   fetchCatalogue,
   fetchCatalogueFilters,
+  importTmdbTitle,
   posterUrl,
+  searchTmdbTitles,
 } from './api'
 import { CatalogueMessage } from './CatalogueMessage'
 import { AccountMenu } from '../auth/AccountMenu'
@@ -29,6 +32,19 @@ export function CataloguePage() {
     queryFn: () => fetchCatalogue(parameters),
   })
   const filtersQuery = useQuery({ queryKey: ['catalogue', 'filters'], queryFn: fetchCatalogueFilters })
+  const shouldSearchTmdb = Boolean(
+    parameters.query && !parameters.genre && !parameters.year && catalogueQuery.data?.total === 0,
+  )
+  const tmdbQuery = useQuery({
+    queryKey: ['catalogue', 'tmdb-search', parameters.query, parameters.type],
+    queryFn: () => searchTmdbTitles(parameters.query, parameters.type),
+    enabled: shouldSearchTmdb,
+  })
+  const importMutation = useMutation({
+    mutationFn: ({ type, tmdbId }: { type: 'movie' | 'tv'; tmdbId: number }) =>
+      importTmdbTitle(type, tmdbId),
+    onSuccess: (title) => navigate(`/catalogue/${title.id}`),
+  })
   const pageCount = useMemo(
     () => Math.max(1, Math.ceil((catalogueQuery.data?.total ?? 0) / 24)),
     [catalogueQuery.data?.total],
@@ -112,7 +128,36 @@ export function CataloguePage() {
 
         {catalogueQuery.isError && <CatalogueMessage title="The catalogue is unavailable" body="Start the API and sync the catalogue, then try again." />}
         {catalogueQuery.isLoading && <div className="grid grid-cols-4 gap-x-4 gap-y-[clamp(1rem,2.2vw,2.75rem)] max-md:grid-cols-2">{Array.from({ length: 8 }, (_, index) => <div className="aspect-2/3 animate-[catalogue-scan_1.5s_linear_infinite] bg-[linear-gradient(110deg,#24384a_25%,#334e63_37%,#24384a_63%)] bg-size-[200%_100%] motion-reduce:animate-none" key={index} />)}</div>}
-        {catalogueQuery.data?.items.length === 0 && <CatalogueMessage title="No titles match these filters" body="Broaden a filter or search for another title." />}
+        {catalogueQuery.data?.items.length === 0 && !shouldSearchTmdb && (
+          <CatalogueMessage
+            title="No titles match these filters"
+            body="Broaden a filter or search for another title."
+          />
+        )}
+        {shouldSearchTmdb && tmdbQuery.isLoading && <CatalogueMessage title="Searching TMDB" body="Looking beyond the local catalogue…" />}
+        {shouldSearchTmdb && tmdbQuery.isError && <CatalogueMessage title="No local titles match" body="TMDB search is unavailable right now." />}
+        {shouldSearchTmdb && tmdbQuery.data?.items.length === 0 && <CatalogueMessage title="No titles match this search" body="Try another title." />}
+        {shouldSearchTmdb && tmdbQuery.data && tmdbQuery.data.items.length > 0 && (
+          <div>
+            <CatalogueMessage
+              title="Available from TMDB"
+              body="Choose a title to add it to the catalogue and find similar stories."
+            />
+            <div className="grid grid-cols-4 gap-x-4 gap-y-[clamp(1rem,2.2vw,2.75rem)] max-md:grid-cols-2">
+              {tmdbQuery.data.items.map((title) => (
+                <ExternalTitleCard
+                  key={`${title.type}-${title.tmdbId}`}
+                  title={title}
+                  onImport={() => importMutation.mutate(title)}
+                  disabled={importMutation.isPending}
+                />
+              ))}
+            </div>
+            {importMutation.isError && (
+              <p role="alert" className="mt-5 text-rose-300">Could not import this title. Try again.</p>
+            )}
+          </div>
+        )}
         {catalogueQuery.data && catalogueQuery.data.items.length > 0 && (
           <div className="grid grid-cols-4 gap-x-4 gap-y-[clamp(1rem,2.2vw,2.75rem)] max-md:grid-cols-2">
             {catalogueQuery.data.items.map((title) => <TitleCard key={title.id} title={title} onOpen={(id) => navigate(`/catalogue/${id}`)} />)}
@@ -142,6 +187,33 @@ function TitleCard({ title, onOpen }: { title: CatalogueTitle; onOpen: (titleId:
         <p className="m-0 font-mono text-xs uppercase tracking-[.045em] text-[#d0dbe3]">{title.type === 'movie' ? 'Film' : 'Series'} · {title.releaseDate?.slice(0, 4) ?? '—'}</p>
         <h2 className="my-1.5 font-display text-[clamp(1.3rem,1.8vw,1.8rem)] font-semibold leading-[1.05] tracking-[-.035em]"><button className="text-left" onClick={() => onOpen(title.id)}>{title.title}</button></h2>
         <span className="font-mono text-xs uppercase tracking-[.045em] text-[#d0dbe3]">{title.genres.slice(0, 2).join(' · ')}</span>
+      </div>
+    </article>
+  )
+}
+
+type ExternalTitleCardProps = {
+  title: ExternalTitle
+  onImport: () => void
+  disabled: boolean
+}
+
+function ExternalTitleCard({ title, onImport, disabled }: ExternalTitleCardProps) {
+  const poster = posterUrl(title.posterPath)
+  return (
+    <article className="min-w-0">
+      <button
+        className="group block aspect-2/3 w-full overflow-hidden bg-[#31485c] disabled:opacity-60"
+        onClick={onImport}
+        disabled={disabled}
+        aria-label={`Import ${title.title}`}
+      >
+        {poster ? <img className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.045]" src={poster} alt="" /> : <span className="grid h-full place-items-center font-display italic text-muted-foreground">No image</span>}
+      </button>
+      <div className="pt-3">
+        <p className="m-0 font-mono text-xs uppercase tracking-[.045em] text-[#d0dbe3]">{title.type === 'movie' ? 'Film' : 'Series'} · {title.releaseDate?.slice(0, 4) ?? '—'}</p>
+        <h2 className="my-1.5 font-display text-[clamp(1.3rem,1.8vw,1.8rem)] font-semibold leading-[1.05] tracking-[-.035em]">{title.title}</h2>
+        <span className="font-mono text-xs uppercase tracking-[.045em] text-primary">Add and find similar</span>
       </div>
     </article>
   )

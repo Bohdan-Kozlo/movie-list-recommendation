@@ -5,6 +5,7 @@ import { fetchCatalogueTitle, posterUrl } from './api'
 import { CatalogueMessage } from './CatalogueMessage'
 import { AccountMenu } from '../auth/AccountMenu'
 import { InteractionControls } from '../interactions/InteractionControls'
+import { SimilarTitles } from '../recommendations/SimilarTitles'
 
 export function TitleDetailsPage() {
   const navigate = useNavigate()
@@ -40,6 +41,7 @@ export function TitleDetailsPage() {
         </section>
       </div>
       {title.cast.length > 0 && <section className="mx-auto w-[84vw] max-w-280 py-14"><p className="m-0 font-mono text-xs font-bold uppercase tracking-[.12em] text-primary">Featured cast</p><div className="mt-5 grid grid-cols-[repeat(auto-fit,minmax(11rem,1fr))] border-t">{title.cast.map((person) => <div className="grid min-h-22 gap-1.5 border-r border-b p-4" key={`${person.name}-${person.character}`}><strong>{person.name}</strong><span className="font-mono text-xs uppercase tracking-[.045em] text-[#d0dbe3]">{person.character}</span></div>)}</div></section>}
+      <SimilarTitles titleId={title.id} />
     </main>
   )
 }

@@ -34,6 +34,11 @@ class Settings:
     database_url: str
     tmdb_api_key: str | None
     tmdb_base_url: str = "https://api.themoviedb.org/3"
+    ollama_base_url: str = "http://localhost:11434"
+    ollama_embedding_model: str = "qwen3-embedding:0.6b"
+    qdrant_url: str | None = None
+    qdrant_api_key: str | None = None
+    qdrant_collection: str = "movie-list-recommendation"
     auth_jwt_secret: str | None = None
     google_client_id: str | None = None
     google_client_secret: str | None = None
@@ -52,6 +57,11 @@ class Settings:
             database_url=database_url,
             tmdb_api_key=getenv("TMDB_API_KEY"),
             tmdb_base_url=getenv("TMDB_BASE_URL", "https://api.themoviedb.org/3"),
+            ollama_base_url=getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
+            ollama_embedding_model=getenv("OLLAMA_EMBEDDING_MODEL", "qwen3-embedding:0.6b"),
+            qdrant_url=getenv("QDRANT_URL"),
+            qdrant_api_key=getenv("QDRANT_API_KEY"),
+            qdrant_collection=getenv("QDRANT_COLLECTION", "movie-list-recommendation"),
             auth_jwt_secret=getenv("AUTH_JWT_SECRET"),
             google_client_id=getenv("GOOGLE_CLIENT_ID"),
             google_client_secret=getenv("GOOGLE_CLIENT_SECRET"),
@@ -65,6 +75,16 @@ class Settings:
         if not self.tmdb_api_key:
             raise RuntimeError("TMDB_API_KEY must be configured for catalogue synchronization.")
         return self.tmdb_api_key
+
+    def require_qdrant_url(self) -> str:
+        if not self.qdrant_url:
+            raise RuntimeError("QDRANT_URL must be configured for semantic recommendations.")
+        return self.qdrant_url
+
+    def require_qdrant_api_key(self) -> str:
+        if not self.qdrant_api_key:
+            raise RuntimeError("QDRANT_API_KEY must be configured for semantic recommendations.")
+        return self.qdrant_api_key
 
     def require_auth_jwt_secret(self) -> str:
         """Return the configured key used to sign access and refresh JWTs."""

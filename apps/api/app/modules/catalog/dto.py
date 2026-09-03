@@ -6,6 +6,7 @@ from app.modules.catalog.domain import (
     CatalogueFacets,
     CataloguePage,
     CatalogueQuery,
+    ExternalTitle,
     TitleDetails,
     TitleSummary,
 )
@@ -48,6 +49,20 @@ class CatalogueFacetsResponse(BaseModel):
     genres: list[str]
     languages: list[str]
     years: list[int]
+
+
+class ExternalTitleResponse(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    tmdb_id: int = Field(serialization_alias="tmdbId")
+    title_type: str = Field(serialization_alias="type")
+    title: str
+    release_date: str | None = Field(serialization_alias="releaseDate")
+    poster_path: str | None = Field(serialization_alias="posterPath")
+
+
+class ExternalTitleSearchResponse(BaseModel):
+    items: list[ExternalTitleResponse]
 
 
 def to_catalogue_query(
@@ -109,4 +124,14 @@ def to_facets_response(facets: CatalogueFacets) -> CatalogueFacetsResponse:
         genres=facets.genres,
         languages=facets.languages,
         years=facets.years,
+    )
+
+
+def to_external_title_response(title: ExternalTitle) -> ExternalTitleResponse:
+    return ExternalTitleResponse(
+        tmdb_id=title.tmdb_id,
+        title_type=title.title_type,
+        title=title.title,
+        release_date=title.release_date.isoformat() if title.release_date else None,
+        poster_path=title.poster_path,
     )

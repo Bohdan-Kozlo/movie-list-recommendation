@@ -48,6 +48,29 @@ class SqlAlchemyCatalogueRepository:
             )
             return to_title_details(title) if title is not None else None
 
+    def details_by_tmdb(self, title_type: str, tmdb_id: int) -> TitleDetails | None:
+        provider = f"tmdb_{title_type}"
+        with Session(self._engine) as session:
+            title = session.scalar(
+                select(CatalogueTitle)
+                .join(ExternalIdentifier)
+                .where(
+                    ExternalIdentifier.provider == provider,
+                    ExternalIdentifier.value == str(tmdb_id),
+                )
+                .options(selectinload(CatalogueTitle.genres))
+            )
+            return to_title_details(title) if title is not None else None
+
+    def all_details(self) -> list[TitleDetails]:
+        with Session(self._engine) as session:
+            titles = session.scalars(
+                select(CatalogueTitle)
+                .options(selectinload(CatalogueTitle.genres))
+                .order_by(CatalogueTitle.id)
+            ).all()
+        return [to_title_details(title) for title in titles]
+
     def facets(self) -> CatalogueFacets:
         with Session(self._engine) as session:
             genres = list(session.scalars(select(Genre.name).order_by(Genre.name)).all())

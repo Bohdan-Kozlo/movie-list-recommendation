@@ -27,19 +27,32 @@ def main() -> None:
         if arguments.pages < 1:
             parser.error("--pages must be at least 1")
         sys.path.insert(0, str(API_SOURCE_ROOT))
+        from app.adapters.ollama.client import OllamaEmbeddingClient
         from app.adapters.postgres.catalogue_repository import (
             SqlAlchemyCatalogueRepository,
         )
+        from app.adapters.qdrant.client import QdrantClient
+        from app.adapters.semantic import SemanticTitleIndexer
         from app.adapters.tmdb.client import TmdbClient
         from app.core.config import Settings
         from app.core.database import create_database_engine
         from app.modules.catalog.use_cases import SynchronizeCatalogue
+        from app.modules.recommendations.use_cases import IndexCatalogue
 
         settings = Settings.from_environment()
         gateway = TmdbClient(settings.require_tmdb_api_key(), settings.tmdb_base_url)
         title_types = ["movie", "tv"] if arguments.title_type == "all" else [arguments.title_type]
-        use_case = SynchronizeCatalogue(
-            SqlAlchemyCatalogueRepository(create_database_engine(settings.database_url))
+        repository = SqlAlchemyCatalogueRepository(create_database_engine(settings.database_url))
+        report = SynchronizeCatalogue(repository).execute(gateway, title_types, arguments.pages)
+        index = SemanticTitleIndexer(
+            OllamaEmbeddingClient(settings.ollama_base_url, settings.ollama_embedding_model),
+            QdrantClient(
+                settings.require_qdrant_url(),
+                settings.require_qdrant_api_key(),
+                settings.qdrant_collection,
+            ),
         )
-        report = use_case.execute(gateway, title_types, arguments.pages)
-        print(json.dumps({"created": report.created, "updated": report.updated}))
+        indexed = IndexCatalogue(repository, index).execute()
+        print(
+            json.dumps({"created": report.created, "updated": report.updated, "indexed": indexed})
+        )

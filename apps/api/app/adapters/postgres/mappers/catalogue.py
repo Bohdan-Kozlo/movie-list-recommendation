@@ -18,6 +18,14 @@ def to_title_summary(title: CatalogueTitle) -> TitleSummary:
 
 
 def to_title_details(title: CatalogueTitle) -> TitleDetails:
+    tmdb_identifier = next(
+        (
+            identifier
+            for identifier in title.external_ids
+            if identifier.provider.startswith("tmdb_")
+        ),
+        None,
+    )
     return TitleDetails(
         **to_title_summary(title).__dict__,
         overview=title.overview,
@@ -28,4 +36,5 @@ def to_title_details(title: CatalogueTitle) -> TitleDetails:
         cast=title.cast,
         creators=title.creators,
         keywords=title.keywords,
+        tmdb_id=int(tmdb_identifier.value) if tmdb_identifier else None,
     )

@@ -53,6 +53,7 @@ class TitleDetails(TitleSummary):
     cast: list[dict[str, str]]
     creators: list[str]
     keywords: list[str]
+    tmdb_id: int | None = None
 
 
 @dataclass(frozen=True)
@@ -62,3 +63,14 @@ class CatalogueFacets:
     genres: list[str]
     languages: list[str]
     years: list[int]
+
+
+@dataclass(frozen=True)
+class ExternalTitle:
+    """A lightweight TMDB search result that has not yet been imported."""
+
+    tmdb_id: int
+    title_type: str
+    title: str
+    release_date: date | None
+    poster_path: str | None

@@ -27,6 +27,14 @@ export type CatalogueTitleDetails = CatalogueTitle & {
   keywords: string[]
 }
 
+export type ExternalTitle = {
+  tmdbId: number
+  type: 'movie' | 'tv'
+  title: string
+  releaseDate: string | null
+  posterPath: string | null
+}
+
 export type BrowseParameters = {
   query: string
   type: '' | 'movie' | 'tv'
@@ -52,9 +60,19 @@ export function fetchCatalogueTitle(titleId: string): Promise<CatalogueTitleDeta
   return catalogueRequest<CatalogueTitleDetails>(`/catalogue/titles/${titleId}`)
 }
 
-async function catalogueRequest<T>(path: string): Promise<T> {
+export function searchTmdbTitles(query: string, type: '' | 'movie' | 'tv'): Promise<{ items: ExternalTitle[] }> {
+  const parameters = new URLSearchParams({ query })
+  if (type) parameters.set('type', type)
+  return catalogueRequest<{ items: ExternalTitle[] }>(`/catalogue/tmdb-search?${parameters}`)
+}
+
+export function importTmdbTitle(type: 'movie' | 'tv', tmdbId: number): Promise<CatalogueTitleDetails> {
+  return catalogueRequest<CatalogueTitleDetails>(`/catalogue/tmdb-titles/${type}/${tmdbId}`, { method: 'POST' })
+}
+
+async function catalogueRequest<T>(path: string, init?: RequestInit): Promise<T> {
   try {
-    return await apiRequest<T>(path)
+    return await apiRequest<T>(path, init)
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) {
       throw new Error('This title is no longer in the catalogue.')
