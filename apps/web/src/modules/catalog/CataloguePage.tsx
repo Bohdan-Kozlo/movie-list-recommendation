@@ -16,7 +16,6 @@ const initialParameters: BrowseParameters = {
   query: '',
   type: '',
   genre: '',
-  language: '',
   year: '',
   page: 1,
 }
@@ -50,89 +49,82 @@ export function CataloguePage() {
   }
 
   return (
-    <main className="catalogue-shell">
-      <header className="masthead">
-        <Link className="wordmark" to="/catalogue" onClick={resetFilters}>
+    <main className="mx-auto w-full max-w-360 px-[4vw] pb-16">
+      <header className="flex min-h-21 items-center justify-between gap-4 border-b">
+        <Link className="font-display text-[clamp(1.2rem,2vw,1.65rem)] font-bold tracking-[-.055em]" to="/catalogue" onClick={resetFilters}>
           REEL / INDEX
         </Link>
-        <div className="masthead-right"><p className="masthead-note">English films &amp; series · selected by signal</p><AccountMenu /></div>
+        <div className="flex items-center gap-4"><p className="hidden font-mono text-xs uppercase tracking-[.045em] text-[#d0dbe3] md:block">English films &amp; series · selected by signal</p><AccountMenu /></div>
       </header>
 
-      <section className="catalogue-intro" aria-labelledby="catalogue-title">
-        <p className="eyebrow">The catalogue</p>
-        <h1 id="catalogue-title">Find the next story<br />worth your evening.</h1>
-        <p>Browse a living index of films and television, refreshed from TMDB.</p>
+      <section className="grid grid-cols-[minmax(5rem,.35fr)_1fr] gap-x-8 border-b py-[clamp(2.5rem,6vw,5.5rem)] max-md:grid-cols-1" aria-labelledby="catalogue-title">
+        <p className="m-0 mt-2 font-mono text-xs font-bold uppercase tracking-[.12em] text-primary max-md:mb-5">The catalogue</p>
+        <h1 id="catalogue-title" className="m-0 max-w-[14ch] font-display text-[clamp(2.85rem,5.5vw,5.25rem)] font-semibold leading-[.92] tracking-[-.06em] max-md:col-start-1">Find the next story worth your evening.</h1>
       </section>
 
-      <section className="discovery-panel" aria-label="Catalogue search and filters">
-        <form className="search-form" onSubmit={submitSearch}>
-          <label htmlFor="title-search">Search titles</label>
-          <div className="search-row">
+      <section className="grid grid-cols-[minmax(18rem,1.2fr)_1.5fr_auto] items-end gap-x-8 gap-y-5 border-b py-8 max-md:grid-cols-1" aria-label="Catalogue search and filters">
+        <form className="grid gap-2" onSubmit={submitSearch}>
+          <label className="font-mono text-xs font-bold uppercase tracking-[.1em] text-muted-foreground" htmlFor="title-search">Search titles</label>
+          <div className="flex">
             <input
+              className="min-w-0 flex-1 rounded-l-sm border-r-0 bg-card px-3.5 py-3 text-foreground placeholder:text-muted-foreground"
               id="title-search"
               value={searchDraft}
               onChange={(event) => setSearchDraft(event.target.value)}
               placeholder="Try “Dune” or “The Bear”"
             />
-            <button type="submit">Search</button>
+            <button className="rounded-r-sm border-primary bg-primary px-4 py-3 text-primary-foreground" type="submit">Search</button>
           </div>
         </form>
 
-        <div className="filter-grid">
-          <label>
+        <div className="grid grid-cols-3 gap-2 max-sm:grid-cols-1">
+          <label className="grid gap-2 font-mono text-xs font-bold uppercase tracking-[.1em] text-muted-foreground">
             Format
-            <select value={parameters.type} onChange={(event) => changeFilter('type', event.target.value)}>
+            <select className="min-w-0 rounded-sm bg-card px-3.5 py-3 text-foreground" value={parameters.type} onChange={(event) => changeFilter('type', event.target.value)}>
               <option value="">All formats</option>
               <option value="movie">Movies</option>
               <option value="tv">TV series</option>
             </select>
           </label>
-          <label>
+          <label className="grid gap-2 font-mono text-xs font-bold uppercase tracking-[.1em] text-muted-foreground">
             Genre
-            <select value={parameters.genre} onChange={(event) => changeFilter('genre', event.target.value)}>
+            <select className="min-w-0 rounded-sm bg-card px-3.5 py-3 text-foreground" value={parameters.genre} onChange={(event) => changeFilter('genre', event.target.value)}>
               <option value="">Every genre</option>
               {filtersQuery.data?.genres.map((genre) => <option key={genre}>{genre}</option>)}
             </select>
           </label>
-          <label>
-            Original language
-            <select value={parameters.language} onChange={(event) => changeFilter('language', event.target.value)}>
-              <option value="">Every language</option>
-              {filtersQuery.data?.languages.map((language) => <option key={language} value={language}>{language.toUpperCase()}</option>)}
-            </select>
-          </label>
-          <label>
+          <label className="grid gap-2 font-mono text-xs font-bold uppercase tracking-[.1em] text-muted-foreground">
             Year
-            <select value={parameters.year} onChange={(event) => changeFilter('year', event.target.value)}>
+            <select className="min-w-0 rounded-sm bg-card px-3.5 py-3 text-foreground" value={parameters.year} onChange={(event) => changeFilter('year', event.target.value)}>
               <option value="">Any year</option>
               {filtersQuery.data?.years.map((year) => <option key={year}>{year}</option>)}
             </select>
           </label>
         </div>
-        <button className="text-button" type="button" onClick={resetFilters}>Clear filters</button>
+        <button className="border-b border-current pb-0.5 text-[#d9e4eb]" type="button" onClick={resetFilters}>Clear filters</button>
       </section>
 
-      <section className="results-section" aria-live="polite">
-        <div className="results-heading">
-          <p className="eyebrow">Results</p>
-          <p>{catalogueQuery.data ? `${catalogueQuery.data.total} titles in the index` : 'Reading the index…'}</p>
+      <section className="pt-8" aria-live="polite">
+        <div className="mb-6 flex items-baseline justify-between max-sm:flex-col max-sm:items-start max-sm:gap-2">
+          <p className="m-0 font-mono text-xs font-bold uppercase tracking-[.12em] text-primary">Results</p>
+          <p className="m-0 font-mono text-xs text-muted-foreground">{catalogueQuery.data ? `${catalogueQuery.data.total} titles in the index` : 'Reading the index…'}</p>
         </div>
 
         {catalogueQuery.isError && <CatalogueMessage title="The catalogue is unavailable" body="Start the API and sync the catalogue, then try again." />}
-        {catalogueQuery.isLoading && <div className="title-grid skeleton-grid">{Array.from({ length: 8 }, (_, index) => <div className="skeleton-card" key={index} />)}</div>}
+        {catalogueQuery.isLoading && <div className="grid grid-cols-4 gap-x-4 gap-y-[clamp(1rem,2.2vw,2.75rem)] max-md:grid-cols-2">{Array.from({ length: 8 }, (_, index) => <div className="aspect-2/3 animate-[catalogue-scan_1.5s_linear_infinite] bg-[linear-gradient(110deg,#24384a_25%,#334e63_37%,#24384a_63%)] bg-size-[200%_100%] motion-reduce:animate-none" key={index} />)}</div>}
         {catalogueQuery.data?.items.length === 0 && <CatalogueMessage title="No titles match these filters" body="Broaden a filter or search for another title." />}
         {catalogueQuery.data && catalogueQuery.data.items.length > 0 && (
-          <div className="title-grid">
+          <div className="grid grid-cols-4 gap-x-4 gap-y-[clamp(1rem,2.2vw,2.75rem)] max-md:grid-cols-2">
             {catalogueQuery.data.items.map((title) => <TitleCard key={title.id} title={title} onOpen={(id) => navigate(`/catalogue/${id}`)} />)}
           </div>
         )}
       </section>
 
       {catalogueQuery.data && catalogueQuery.data.total > 0 && (
-        <nav className="pagination" aria-label="Catalogue pages">
-          <button disabled={parameters.page === 1} onClick={() => setParameters((current) => ({ ...current, page: current.page - 1 }))}>Previous</button>
+        <nav className="mt-16 flex items-center justify-center gap-4 font-mono text-xs text-muted-foreground max-sm:gap-2" aria-label="Catalogue pages">
+          <button className="rounded-sm border-primary bg-primary px-4 py-3 text-primary-foreground disabled:cursor-not-allowed disabled:opacity-35" disabled={parameters.page === 1} onClick={() => setParameters((current) => ({ ...current, page: current.page - 1 }))}>Previous</button>
           <span>Page {parameters.page} of {pageCount}</span>
-          <button disabled={parameters.page >= pageCount} onClick={() => setParameters((current) => ({ ...current, page: current.page + 1 }))}>Next</button>
+          <button className="rounded-sm border-primary bg-primary px-4 py-3 text-primary-foreground disabled:cursor-not-allowed disabled:opacity-35" disabled={parameters.page >= pageCount} onClick={() => setParameters((current) => ({ ...current, page: current.page + 1 }))}>Next</button>
         </nav>
       )}
     </main>
@@ -142,14 +134,14 @@ export function CataloguePage() {
 function TitleCard({ title, onOpen }: { title: CatalogueTitle; onOpen: (titleId: string) => void }) {
   const poster = posterUrl(title.posterPath)
   return (
-    <article className="title-card">
-      <button className="poster-button" onClick={() => onOpen(title.id)} aria-label={`Open ${title.title}`}>
-        {poster ? <img src={poster} alt="" /> : <span className="poster-fallback">No image<br />available</span>}
+    <article className="min-w-0">
+      <button className="group block aspect-2/3 w-full overflow-hidden bg-[#31485c]" onClick={() => onOpen(title.id)} aria-label={`Open ${title.title}`}>
+        {poster ? <img className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.045] motion-reduce:transition-none" src={poster} alt="" /> : <span className="grid h-full w-full place-items-center font-display italic leading-[1.1] text-muted-foreground">No image<br />available</span>}
       </button>
-      <div className="title-card-copy">
-        <p>{title.type === 'movie' ? 'Film' : 'Series'} · {title.releaseDate?.slice(0, 4) ?? '—'}</p>
-        <h2><button onClick={() => onOpen(title.id)}>{title.title}</button></h2>
-        <span>{title.genres.slice(0, 2).join(' · ')}</span>
+      <div className="pt-3">
+        <p className="m-0 font-mono text-xs uppercase tracking-[.045em] text-[#d0dbe3]">{title.type === 'movie' ? 'Film' : 'Series'} · {title.releaseDate?.slice(0, 4) ?? '—'}</p>
+        <h2 className="my-1.5 font-display text-[clamp(1.3rem,1.8vw,1.8rem)] font-semibold leading-[1.05] tracking-[-.035em]"><button className="text-left" onClick={() => onOpen(title.id)}>{title.title}</button></h2>
+        <span className="font-mono text-xs uppercase tracking-[.045em] text-[#d0dbe3]">{title.genres.slice(0, 2).join(' · ')}</span>
       </div>
     </article>
   )

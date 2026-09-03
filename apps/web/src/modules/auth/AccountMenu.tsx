@@ -14,7 +14,7 @@ export function AccountMenu() {
 
   if (accountQuery.data) {
     return (
-      <div className="account-menu">
+      <div className="flex items-center gap-4 font-mono text-xs uppercase tracking-[.06em] text-muted-foreground">
         <span>{accountQuery.data.email}</span>
         <Button asChild variant="ghost" size="compact">
           <Link to="/library/watchlist">My library</Link>
@@ -27,7 +27,7 @@ export function AccountMenu() {
   }
 
   return (
-    <nav className="account-menu" aria-label="Account">
+    <nav className="flex items-center gap-4 font-mono text-xs uppercase tracking-[.06em] text-muted-foreground" aria-label="Account">
       <Button asChild variant="ghost" size="compact">
         <Link to="/auth/sign-in">Sign in</Link>
       </Button>

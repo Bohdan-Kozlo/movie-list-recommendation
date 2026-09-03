@@ -13,7 +13,6 @@ export type CataloguePage = {
 
 export type CatalogueFilters = {
   genres: string[]
-  languages: string[]
   years: number[]
 }
 
@@ -32,7 +31,6 @@ export type BrowseParameters = {
   query: string
   type: '' | 'movie' | 'tv'
   genre: string
-  language: string
   year: string
   page: number
 }
@@ -42,7 +40,6 @@ export async function fetchCatalogue(parameters: BrowseParameters): Promise<Cata
   if (parameters.query) searchParameters.set('query', parameters.query)
   if (parameters.type) searchParameters.set('type', parameters.type)
   if (parameters.genre) searchParameters.set('genre', parameters.genre)
-  if (parameters.language) searchParameters.set('language', parameters.language)
   if (parameters.year) searchParameters.set('year', parameters.year)
   return catalogueRequest<CataloguePage>(`/catalogue/titles?${searchParameters}`)
 }

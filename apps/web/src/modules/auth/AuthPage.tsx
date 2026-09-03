@@ -31,26 +31,26 @@ export function AuthPage({ mode }: AuthPageProps) {
   }
 
   return (
-    <main className="auth-page">
-      <Card className="auth-panel" aria-labelledby="auth-title">
-        <Button asChild className="wordmark" variant="ghost" size="compact">
+    <main className="grid min-h-screen place-items-center p-8">
+      <Card className="w-full max-w-124 bg-card p-[clamp(1.8rem,6vw,4.5rem)] shadow-[0_1.5rem_4rem_rgba(5,12,20,.28)]" aria-labelledby="auth-title">
+        <Button asChild className="font-display text-[clamp(1.2rem,2vw,1.65rem)] font-bold tracking-[-.055em]" variant="ghost" size="compact">
           <Link to="/catalogue">
           REEL / INDEX
           </Link>
         </Button>
-        <p className="eyebrow">Your index</p>
-        <h1 id="auth-title">{mode === 'register' ? 'Make your watchlist personal.' : 'Welcome back.'}</h1>
-        <p className="auth-copy">
+        <p className="mt-14 font-mono text-xs font-bold uppercase tracking-[.12em] text-primary">Your index</p>
+        <h1 id="auth-title" className="my-2 max-w-[9ch] font-display text-[clamp(2.8rem,7vw,5.4rem)] font-semibold leading-[.92] tracking-[-.055em]">{mode === 'register' ? 'Make your watchlist personal.' : 'Welcome back.'}</h1>
+        <p className="leading-6 text-muted-foreground">
           {mode === 'register'
             ? 'Save your ratings and build a recommendation profile.'
             : 'Pick up your catalogue and recommendations where you left off.'}
         </p>
-        <form className="auth-form" onSubmit={submit}>
-          <label>
+        <form className="mt-8 grid gap-4" onSubmit={submit}>
+          <label className="grid gap-2 font-mono text-xs font-bold uppercase tracking-[.1em] text-muted-foreground">
             Email
             <Input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
           </label>
-          <label>
+          <label className="grid gap-2 font-mono text-xs font-bold uppercase tracking-[.1em] text-muted-foreground">
             Password
             <Input
               type="password"
@@ -60,18 +60,18 @@ export function AuthPage({ mode }: AuthPageProps) {
               required
             />
           </label>
-          {mutation.isError && <p className="auth-error">{mutation.error.message}</p>}
-          <Button className="auth-submit" type="submit" disabled={mutation.isPending}>
+          {mutation.isError && <p className="text-destructive">{mutation.error.message}</p>}
+          <Button className="w-full" type="submit" disabled={mutation.isPending}>
             {mutation.isPending ? 'Working…' : mode === 'register' ? 'Create account' : 'Sign in'}
           </Button>
         </form>
-        <div className="auth-divider">or</div>
-        <Button className="google-button" variant="outline" type="button" onClick={beginGoogleLogin}>
+        <div className="my-6 grid grid-cols-[1fr_auto_1fr] items-center gap-3 text-center font-mono text-xs uppercase text-muted-foreground before:h-px before:bg-border before:content-[''] after:h-px after:bg-border after:content-['']">or</div>
+        <Button className="w-full" variant="outline" type="button" onClick={beginGoogleLogin}>
           Continue with Google
         </Button>
-        <p className="auth-switch">
+        <p className="mt-6 text-muted-foreground">
           {mode === 'register' ? 'Already have an account?' : 'New to Reel / Index?'}{' '}
-          <Button asChild className="text-button" variant="ghost" size="compact">
+          <Button asChild className="h-auto border-b border-current p-0 pb-0.5 text-[#d9e4eb] hover:bg-transparent" variant="ghost" size="compact">
             <Link to={mode === 'register' ? '/auth/sign-in' : '/auth/register'}>
             {mode === 'register' ? 'Sign in' : 'Create one'}
             </Link>
@@ -102,16 +102,16 @@ export function AuthCallbackPage() {
   }, [queryClient])
 
   return (
-    <main className="auth-page">
-      <Card className="auth-panel auth-callback">
-        <Button asChild className="wordmark" variant="ghost" size="compact">
+    <main className="grid min-h-screen place-items-center p-8">
+      <Card className="min-h-72 w-full max-w-124 bg-card p-[clamp(1.8rem,6vw,4.5rem)] shadow-[0_1.5rem_4rem_rgba(5,12,20,.28)]">
+        <Button asChild className="font-display text-[clamp(1.2rem,2vw,1.65rem)] font-bold tracking-[-.055em]" variant="ghost" size="compact">
           <Link to="/catalogue">
           REEL / INDEX
           </Link>
         </Button>
-        <p className="eyebrow">Account</p>
-        <h1>{message}</h1>
-        <Button asChild className="auth-submit">
+        <p className="mt-14 font-mono text-xs font-bold uppercase tracking-[.12em] text-primary">Account</p>
+        <h1 className="my-2 max-w-[9ch] font-display text-[clamp(2.8rem,7vw,5.4rem)] font-semibold leading-[.92] tracking-[-.055em]">{message}</h1>
+        <Button asChild className="w-full">
           <Link to="/catalogue">
           Browse the catalogue
           </Link>

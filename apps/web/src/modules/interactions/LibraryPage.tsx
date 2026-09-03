@@ -28,27 +28,27 @@ export function LibraryPage() {
   if (!isCollection(collection)) return <Navigate replace to="/library/watchlist" />
 
   return (
-    <main className="catalogue-shell">
-      <header className="masthead">
-        <Link className="wordmark" to="/catalogue">REEL / INDEX</Link>
+    <main className="mx-auto w-full max-w-360 px-[4vw] pb-16">
+      <header className="flex min-h-21 items-center justify-between gap-4 border-b">
+        <Link className="font-display text-[clamp(1.2rem,2vw,1.65rem)] font-bold tracking-[-.055em]" to="/catalogue">REEL / INDEX</Link>
         <AccountMenu />
       </header>
       <section className="py-12">
-        <p className="eyebrow">Personal collection</p>
-        <h1 className="mt-2 font-serif text-5xl tracking-tight sm:text-7xl">My library</h1>
+        <p className="m-0 font-mono text-xs font-bold uppercase tracking-[.12em] text-primary">Personal collection</p>
+        <h1 className="mt-2 font-display text-5xl font-semibold tracking-[-.055em] sm:text-7xl">My library</h1>
         <nav aria-label="Library collection" className="mt-8 flex flex-wrap gap-2 border-b border-border pb-5">
-          {collections.map((item) => <Link key={item.id} to={`/library/${item.id}`} className={item.id === activeCollection ? 'border border-primary bg-primary px-3 py-2 text-sm text-primary-foreground' : 'border border-border px-3 py-2 text-sm hover:bg-card'}>{item.label}</Link>)}
+          {collections.map((item) => <Link key={item.id} to={`/library/${item.id}`} className={item.id === activeCollection ? 'rounded-sm border-primary bg-primary px-3 py-2 text-sm text-primary-foreground' : 'rounded-sm px-3 py-2 text-sm hover:bg-card'}>{item.label}</Link>)}
         </nav>
       </section>
       {libraryQuery.isLoading && <p className="py-8 text-muted-foreground">Loading your library…</p>}
-      {libraryQuery.isError && <p role="alert" className="py-8 text-red-800">{libraryQuery.error.message}</p>}
+      {libraryQuery.isError && <p role="alert" className="py-8 text-rose-300">{libraryQuery.error.message}</p>}
       {libraryQuery.data && (libraryQuery.data.items.length === 0 ? (
         <Card className="p-8 text-muted-foreground">No titles in this collection yet. Browse the catalogue to make it personal.</Card>
       ) : (
         <section className="grid gap-4 pb-12 sm:grid-cols-2 lg:grid-cols-3">
           {libraryQuery.data.items.map((item) => {
             const poster = posterUrl(item.posterPath)
-            return <Link key={item.id} to={`/catalogue/${item.id}`}><Card className="flex min-h-40 gap-4 p-4 transition-colors hover:bg-background"><div className="w-20 shrink-0 bg-background">{poster ? <img className="h-full w-full object-cover" src={poster} alt="" /> : <span className="p-2 text-xs text-muted-foreground">No image</span>}</div><div><p className="eyebrow">{item.type === 'movie' ? 'Film' : 'TV series'}{item.releaseDate ? ` · ${item.releaseDate.slice(0, 4)}` : ''}</p><h2 className="mt-2 font-serif text-2xl leading-none">{item.title}</h2><p className="mt-3 text-sm text-muted-foreground">{item.rating === null ? item.genres.join(' · ') : `Your rating: ${item.rating.toFixed(1)} / 5`}</p></div></Card></Link>
+            return <Link key={item.id} to={`/catalogue/${item.id}`}><Card className="flex min-h-40 gap-4 p-4 transition-colors hover:bg-background"><div className="w-20 shrink-0 bg-background">{poster ? <img className="h-full w-full object-cover" src={poster} alt="" /> : <span className="p-2 text-xs text-muted-foreground">No image</span>}</div><div><p className="m-0 font-mono text-xs font-bold uppercase tracking-[.12em] text-primary">{item.type === 'movie' ? 'Film' : 'TV series'}{item.releaseDate ? ` · ${item.releaseDate.slice(0, 4)}` : ''}</p><h2 className="mt-2 font-display text-2xl font-semibold leading-none tracking-tight">{item.title}</h2><p className="mt-3 text-sm text-muted-foreground">{item.rating === null ? item.genres.join(' · ') : `Your rating: ${item.rating.toFixed(1)} / 5`}</p></div></Card></Link>
           })}
         </section>
       ))}

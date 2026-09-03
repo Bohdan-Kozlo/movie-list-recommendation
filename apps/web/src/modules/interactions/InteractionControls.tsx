@@ -16,11 +16,7 @@ import {
 import { Button } from '../../shared/ui/Button'
 import { Card } from '../../shared/ui/Card'
 
-type InteractionControlsProps = {
-  titleId: string
-}
-
-const ratingValues = Array.from({ length: 10 }, (_, index) => (index + 1) / 2)
+type InteractionControlsProps = { titleId: string }
 
 export function InteractionControls({ titleId }: InteractionControlsProps) {
   const queryClient = useQueryClient()
@@ -40,7 +36,7 @@ export function InteractionControls({ titleId }: InteractionControlsProps) {
   if (statusQuery.isLoading || statusQuery.data === undefined) {
     return <p className="text-sm text-muted-foreground">Loading your library…</p>
   }
-  if (statusQuery.isError) return <p role="alert" className="text-sm text-red-800">Library actions are unavailable.</p>
+  if (statusQuery.isError) return <p role="alert" className="text-sm text-rose-300">Library actions are unavailable.</p>
   const status = statusQuery.data
   if (status === null) {
     return <p className="text-sm text-muted-foreground"><Link className="underline" to="/auth/sign-in">Sign in</Link> to rate and save this title.</p>
@@ -48,30 +44,50 @@ export function InteractionControls({ titleId }: InteractionControlsProps) {
 
   const run = (action: () => Promise<void>) => mutation.mutate(action)
   return (
-    <Card className="mt-8 grid gap-4 p-5">
-      <div>
-        <p className="eyebrow">Your library</p>
-        <h2 className="mt-1 font-serif text-2xl">Make this title yours</h2>
-      </div>
+    <div className="mt-8 grid gap-4">
       {status.rating === null ? (
-        <div className="flex flex-wrap items-end gap-3">
-          <label className="grid gap-1 text-sm text-muted-foreground">
-            Rating
-            <select value={rating} onChange={(event) => setRating(event.target.value)} className="h-11 border border-border bg-background px-3 text-foreground">
-              {ratingValues.map((value) => <option key={value} value={value}>{value.toFixed(1)} / 5</option>)}
-            </select>
-          </label>
-          <Button type="button" onClick={() => run(() => createRating(titleId, Number(rating)))} disabled={mutation.isPending}>Save rating</Button>
-        </div>
+        <Card className="grid gap-5 p-5">
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <p className="m-0 font-mono text-xs font-bold uppercase tracking-[.12em] text-primary">Your rating</p>
+              <h2 className="mt-1 font-display text-2xl font-semibold tracking-tight">How much did it land?</h2>
+            </div>
+            <output className="font-display text-4xl font-semibold tracking-[-.06em] text-primary" aria-live="polite">{Number(rating).toFixed(1)}<span className="ml-1 text-base font-normal text-muted-foreground">/ 5</span></output>
+          </div>
+          <div className="grid gap-2">
+            <label className="sr-only" htmlFor="title-rating">Choose a rating from 0.5 to 5.0</label>
+            <input
+              id="title-rating"
+              className="h-3 w-full cursor-pointer accent-primary"
+              type="range"
+              min="0.5"
+              max="5"
+              step="0.5"
+              value={rating}
+              onChange={(event) => setRating(event.target.value)}
+            />
+            <div className="flex justify-between font-mono text-xs text-muted-foreground"><span>0.5</span><span>5.0</span></div>
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4">
+            <p className="m-0 text-sm text-muted-foreground">Choose in half-star steps. Ratings cannot be edited after saving.</p>
+            <Button type="button" onClick={() => run(() => createRating(titleId, Number(rating)))} disabled={mutation.isPending}>Save {Number(rating).toFixed(1)} rating</Button>
+          </div>
+        </Card>
       ) : (
-        <div className="flex flex-wrap items-center gap-3"><span className="text-sm">Your rating: <strong>{status.rating.toFixed(1)} / 5</strong></span><Button variant="outline" type="button" onClick={() => run(() => deleteRating(titleId))} disabled={mutation.isPending}>Delete rating</Button></div>
+        <Card className="flex flex-wrap items-center justify-between gap-4 p-5">
+          <div><p className="m-0 font-mono text-xs font-bold uppercase tracking-[.12em] text-primary">Your rating</p><p className="mt-1 font-display text-3xl font-semibold tracking-[-.05em]">{status.rating.toFixed(1)} <span className="text-base font-normal text-muted-foreground">/ 5</span></p></div>
+          <Button variant="outline" type="button" onClick={() => run(() => deleteRating(titleId))} disabled={mutation.isPending}>Delete rating</Button>
+        </Card>
       )}
-      <div className="flex flex-wrap gap-2">
-        <Button variant={status.is_watchlisted ? 'outline' : 'default'} type="button" onClick={() => run(() => status.is_watchlisted ? removeWatchlist(titleId) : addWatchlist(titleId))} disabled={mutation.isPending}>{status.is_watchlisted ? 'Remove from watchlist' : 'Add to watchlist'}</Button>
-        <Button variant={status.is_watched ? 'outline' : 'default'} type="button" onClick={() => run(() => status.is_watched ? removeWatched(titleId) : markWatched(titleId))} disabled={mutation.isPending}>{status.is_watched ? 'Remove watched' : 'Mark watched'}</Button>
-        <Button variant={status.is_not_interested ? 'outline' : 'ghost'} type="button" onClick={() => run(() => status.is_not_interested ? removeNotInterested(titleId) : addNotInterested(titleId))} disabled={mutation.isPending}>{status.is_not_interested ? 'Restore interest' : 'Not interested'}</Button>
-      </div>
-      {mutation.isError && <p role="alert" className="text-sm text-red-800">{mutation.error.message}</p>}
-    </Card>
+      <Card className="grid gap-4 p-5">
+        <div><p className="m-0 font-mono text-xs font-bold uppercase tracking-[.12em] text-primary">Watch status</p><h2 className="mt-1 font-display text-2xl font-semibold tracking-tight">Keep it in the right place</h2><p className="mb-0 mt-2 text-sm text-muted-foreground">Watched and not interested titles are removed from your watchlist automatically.</p></div>
+        <div className="flex flex-wrap gap-2">
+          <Button variant={status.is_watchlisted ? 'outline' : 'default'} type="button" onClick={() => run(() => status.is_watchlisted ? removeWatchlist(titleId) : addWatchlist(titleId))} disabled={mutation.isPending}>{status.is_watchlisted ? 'Remove from watchlist' : 'Add to watchlist'}</Button>
+          <Button variant="outline" type="button" onClick={() => run(() => status.is_watched ? removeWatched(titleId) : markWatched(titleId))} disabled={mutation.isPending}>{status.is_watched ? 'Remove watched' : 'Mark watched'}</Button>
+          <Button variant={status.is_not_interested ? 'outline' : 'ghost'} type="button" onClick={() => run(() => status.is_not_interested ? removeNotInterested(titleId) : addNotInterested(titleId))} disabled={mutation.isPending}>{status.is_not_interested ? 'Restore interest' : 'Not interested'}</Button>
+        </div>
+        {mutation.isError && <p role="alert" className="m-0 text-sm text-rose-300">{mutation.error.message}</p>}
+      </Card>
+    </div>
   )
 }
