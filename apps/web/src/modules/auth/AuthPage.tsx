@@ -6,6 +6,7 @@ import { Button } from '../../shared/ui/Button'
 import { Card } from '../../shared/ui/Card'
 import { Input } from '../../shared/ui/Input'
 import { beginGoogleLogin, fetchCurrentUser, login, register } from './api'
+import { fetchOnboarding } from '../onboarding/api'
 
 type AuthPageProps = {
   mode: 'sign-in' | 'register'
@@ -19,9 +20,9 @@ export function AuthPage({ mode }: AuthPageProps) {
   const action = mode === 'register' ? register : login
   const mutation = useMutation({
     mutationFn: () => action(email, password),
-    onSuccess: (user) => {
+    onSuccess: async (user) => {
       queryClient.setQueryData(['auth', 'me'], user)
-      navigate('/catalogue')
+      await navigateAfterAuthentication(navigate)
     },
   })
 
@@ -83,6 +84,7 @@ export function AuthPage({ mode }: AuthPageProps) {
 }
 
 export function AuthCallbackPage() {
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [message, setMessage] = useState('Completing your sign-in…')
 
@@ -93,13 +95,14 @@ export function AuthCallbackPage() {
       return
     }
     fetchCurrentUser()
-      .then((user) => {
+      .then(async (user) => {
         if (!user) throw new Error()
         queryClient.setQueryData(['auth', 'me'], user)
         setMessage('Signed in. Your account is ready.')
+        await navigateAfterAuthentication(navigate)
       })
       .catch(() => setMessage('Google could not sign you in. Please try again.'))
-  }, [queryClient])
+  }, [navigate, queryClient])
 
   return (
     <main className="grid min-h-screen place-items-center p-8">
@@ -119,4 +122,9 @@ export function AuthCallbackPage() {
       </Card>
     </main>
   )
+}
+
+async function navigateAfterAuthentication(navigate: ReturnType<typeof useNavigate>) {
+  const onboarding = await fetchOnboarding()
+  navigate(onboarding.isComplete ? '/catalogue' : '/onboarding')
 }

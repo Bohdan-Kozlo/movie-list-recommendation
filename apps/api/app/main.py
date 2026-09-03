@@ -7,6 +7,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from app.modules.auth.api import router as auth_router
 from app.modules.catalog.api import router as catalogue_router
 from app.modules.interactions.api import router as interactions_router
+from app.modules.onboarding.api import router as onboarding_router
 from app.modules.recommendations.api import router as recommendations_router
 
 app_environment = getenv("APP_ENV", "development")
@@ -33,6 +34,7 @@ app.add_middleware(
 app.include_router(catalogue_router)
 app.include_router(auth_router)
 app.include_router(interactions_router)
+app.include_router(onboarding_router)
 app.include_router(recommendations_router)
 
 

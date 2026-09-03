@@ -1,0 +1,1 @@
+"""Mandatory taste-onboarding capability."""
