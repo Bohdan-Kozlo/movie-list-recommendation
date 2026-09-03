@@ -1,7 +1,28 @@
 """Runtime configuration read from the environment."""
 
 from dataclasses import dataclass
-from os import getenv
+from os import environ, getenv
+from pathlib import Path
+
+ENV_FILE = Path(__file__).resolve().parents[4] / ".env"
+
+
+def load_environment(path: Path | None = None) -> None:
+    """Load local development settings without replacing process configuration."""
+    environment_file = path or ENV_FILE
+    if not environment_file.is_file():
+        return
+    for line in environment_file.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        key, separator, value = stripped.partition("=")
+        if not separator or not key:
+            continue
+        environ.setdefault(key.strip(), value.strip().strip("\"'"))
+
+
+load_environment()
 
 
 @dataclass(frozen=True)
@@ -21,6 +42,7 @@ class Settings:
     @classmethod
     def from_environment(cls) -> "Settings":
         """Load the explicitly configured local or container environment."""
+        load_environment()
         database_url = getenv("DATABASE_URL")
         if not database_url:
             raise RuntimeError("DATABASE_URL must be configured for catalogue access.")
