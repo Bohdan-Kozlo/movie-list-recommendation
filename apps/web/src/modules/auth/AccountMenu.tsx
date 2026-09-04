@@ -19,6 +19,9 @@ export function AccountMenu() {
         <Button asChild variant="ghost" size="compact">
           <Link to="/library/watchlist">My library</Link>
         </Button>
+        <Button asChild variant="ghost" size="compact">
+          <Link to="/recommendations">Recommendations</Link>
+        </Button>
         <Button variant="ghost" size="compact" type="button" onClick={() => logoutMutation.mutate()}>
           Sign out
         </Button>

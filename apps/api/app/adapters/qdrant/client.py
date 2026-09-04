@@ -4,7 +4,15 @@ from typing import Any
 
 from qdrant_client import QdrantClient as QdrantSdkClient
 from qdrant_client.http.exceptions import ApiException
-from qdrant_client.models import Distance, Filter, HasIdCondition, PointStruct, VectorParams
+from qdrant_client.models import (
+    Distance,
+    FieldCondition,
+    Filter,
+    HasIdCondition,
+    MatchValue,
+    PointStruct,
+    VectorParams,
+)
 
 
 class QdrantClient:
@@ -26,14 +34,32 @@ class QdrantClient:
         except ApiException as error:
             raise RuntimeError("Qdrant vector upsert failed.") from error
 
-    def search(self, vector: list[float], limit: int, excluded_id: str) -> list[str]:
+    def search(
+        self,
+        vector: list[float],
+        limit: int,
+        excluded_id: str | None = None,
+        title_type: str | None = None,
+        excluded_ids: set[str] | None = None,
+    ) -> list[str]:
         try:
+            must: list[Any] | None = (
+                [FieldCondition(key="type", match=MatchValue(value=title_type))]
+                if title_type is not None
+                else None
+            )
+            excluded = set(excluded_ids or set())
+            if excluded_id is not None:
+                excluded.add(excluded_id)
+            must_not: list[Any] | None = (
+                [HasIdCondition(has_id=sorted(excluded))] if excluded else None
+            )
             response = self._client.query_points(
                 collection_name=self._collection,
                 query=vector,
                 limit=limit,
                 with_payload=["title_id"],
-                query_filter=Filter(must_not=[HasIdCondition(has_id=[excluded_id])]),
+                query_filter=Filter(must=must, must_not=must_not),
             )
         except ApiException as error:
             raise RuntimeError("Qdrant semantic search failed.") from error

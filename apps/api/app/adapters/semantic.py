@@ -17,8 +17,16 @@ class SemanticTitleIndexer:
         self._vectors.upsert(title.id, vector, self._payload(title))
 
     def similar(self, source: TitleDetails, limit: int) -> list[str]:
+        return self._vectors.search(self.embed(source), limit=limit, excluded_id=source.id)
+
+    def embed(self, title: TitleDetails) -> list[float]:
+        return self._embeddings.embed(self._text(title))
+
+    def search_profile(
+        self, vector: list[float], title_type: str, limit: int, excluded_ids: set[str]
+    ) -> list[str]:
         return self._vectors.search(
-            self._embeddings.embed(self._text(source)), limit=limit, excluded_id=source.id
+            vector, limit=limit, title_type=title_type, excluded_ids=excluded_ids
         )
 
     @staticmethod

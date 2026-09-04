@@ -5,6 +5,7 @@ import { TitleDetailsPage } from '../modules/catalog/TitleDetailsPage'
 import { AuthCallbackPage, AuthPage } from '../modules/auth/AuthPage'
 import { LibraryPage } from '../modules/interactions/LibraryPage'
 import { OnboardingPage } from '../modules/onboarding/OnboardingPage'
+import { PersonalRecommendationsPage } from '../modules/recommendations/PersonalRecommendationsPage'
 
 export function App() {
   return (
@@ -15,6 +16,7 @@ export function App() {
       <Route path="/library" element={<Navigate replace to="/library/watchlist" />} />
       <Route path="/library/:collection" element={<LibraryPage />} />
       <Route path="/onboarding" element={<OnboardingPage />} />
+      <Route path="/recommendations" element={<PersonalRecommendationsPage />} />
       <Route path="/auth/register" element={<AuthPage mode="register" />} />
       <Route path="/auth/sign-in" element={<AuthPage mode="sign-in" />} />
       <Route path="/auth/callback" element={<AuthCallbackPage />} />
