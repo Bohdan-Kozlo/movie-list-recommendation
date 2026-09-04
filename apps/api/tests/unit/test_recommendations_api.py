@@ -161,6 +161,9 @@ def test_personal_recommendations_endpoint_applies_content_rules() -> None:
         def embed(self, source: TitleDetails) -> list[float]:
             return [1.0, 1.0]
 
+        def vectors(self, title_ids: list[str]) -> dict[str, list[float]]:
+            return {}
+
         def search_profile(
             self, vector: list[float], title_type: str, limit: int, excluded_ids: set[str]
         ) -> list[str]:

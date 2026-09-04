@@ -5,6 +5,7 @@ import { ApiError } from '../../shared/api/client'
 import { posterUrl } from '../../shared/catalogue'
 import { fetchPersonalRecommendations, type SimilarTitle } from './api'
 import { Card } from '../../shared/ui/Card'
+import { SiteHeader } from '../navigation/SiteHeader'
 
 export function PersonalRecommendationsPage() {
   const query = useQuery({
@@ -19,11 +20,7 @@ export function PersonalRecommendationsPage() {
 
   return (
     <main className="mx-auto w-full max-w-360 px-[4vw] pb-16">
-      <header className="flex min-h-21 items-center border-b">
-        <Link className="font-display text-[clamp(1.2rem,2vw,1.65rem)] font-bold tracking-[-.055em]" to="/catalogue">
-          REEL / INDEX
-        </Link>
-      </header>
+      <SiteHeader />
       <section className="max-w-4xl py-[clamp(3rem,7vw,6rem)]">
         <p className="m-0 font-mono text-xs font-bold uppercase tracking-[.12em] text-primary">
           From your ratings

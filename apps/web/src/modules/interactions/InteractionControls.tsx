@@ -15,12 +15,13 @@ import {
 } from './api'
 import { Button } from '../../shared/ui/Button'
 import { Card } from '../../shared/ui/Card'
+import { StarRating } from '../../shared/ui/StarRating'
 
 type InteractionControlsProps = { titleId: string }
 
 export function InteractionControls({ titleId }: InteractionControlsProps) {
   const queryClient = useQueryClient()
-  const [rating, setRating] = useState('4.0')
+  const [rating, setRating] = useState(4)
   const statusQuery = useQuery({
     queryKey: ['interactions', 'title', titleId],
     queryFn: () => fetchInteractionStatus(titleId),
@@ -52,25 +53,12 @@ export function InteractionControls({ titleId }: InteractionControlsProps) {
               <p className="m-0 font-mono text-xs font-bold uppercase tracking-[.12em] text-primary">Your rating</p>
               <h2 className="mt-1 font-display text-2xl font-semibold tracking-tight">How much did it land?</h2>
             </div>
-            <output className="font-display text-4xl font-semibold tracking-[-.06em] text-primary" aria-live="polite">{Number(rating).toFixed(1)}<span className="ml-1 text-base font-normal text-muted-foreground">/ 5</span></output>
+            <output className="font-display text-4xl font-semibold tracking-[-.06em] text-primary" aria-live="polite">{rating.toFixed(1)}<span className="ml-1 text-base font-normal text-muted-foreground">/ 5</span></output>
           </div>
-          <div className="grid gap-2">
-            <label className="sr-only" htmlFor="title-rating">Choose a rating from 0.5 to 5.0</label>
-            <input
-              id="title-rating"
-              className="h-3 w-full cursor-pointer accent-primary"
-              type="range"
-              min="0.5"
-              max="5"
-              step="0.5"
-              value={rating}
-              onChange={(event) => setRating(event.target.value)}
-            />
-            <div className="flex justify-between font-mono text-xs text-muted-foreground"><span>0.5</span><span>5.0</span></div>
-          </div>
+          <StarRating label="Choose a rating from 0.5 to 5.0" value={rating} onChange={setRating} disabled={mutation.isPending} />
           <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4">
             <p className="m-0 text-sm text-muted-foreground">Choose in half-star steps. Ratings cannot be edited after saving.</p>
-            <Button type="button" onClick={() => run(() => createRating(titleId, Number(rating)))} disabled={mutation.isPending}>Save {Number(rating).toFixed(1)} rating</Button>
+            <Button type="button" onClick={() => run(() => createRating(titleId, rating))} disabled={mutation.isPending}>Save {rating.toFixed(1)} rating</Button>
           </div>
         </Card>
       ) : (

@@ -3,8 +3,8 @@ import { Link, Navigate, useParams } from 'react-router'
 
 import { fetchLibrary, type LibraryCollection } from './api'
 import { posterUrl } from '../../shared/catalogue'
-import { AccountMenu } from '../auth/AccountMenu'
 import { Card } from '../../shared/ui/Card'
+import { SiteHeader } from '../navigation/SiteHeader'
 
 const collections: Array<{ id: LibraryCollection; label: string }> = [
   { id: 'ratings', label: 'Ratings' },
@@ -29,10 +29,7 @@ export function LibraryPage() {
 
   return (
     <main className="mx-auto w-full max-w-360 px-[4vw] pb-16">
-      <header className="flex min-h-21 items-center justify-between gap-4 border-b">
-        <Link className="font-display text-[clamp(1.2rem,2vw,1.65rem)] font-bold tracking-[-.055em]" to="/catalogue">REEL / INDEX</Link>
-        <AccountMenu />
-      </header>
+      <SiteHeader />
       <section className="py-12">
         <p className="m-0 font-mono text-xs font-bold uppercase tracking-[.12em] text-primary">Personal collection</p>
         <h1 className="mt-2 font-display text-5xl font-semibold tracking-[-.055em] sm:text-7xl">My library</h1>

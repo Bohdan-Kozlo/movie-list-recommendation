@@ -1,6 +1,6 @@
 """Qdrant Cloud adapter backed by the official Python SDK."""
 
-from typing import Any
+from typing import Any, cast
 
 from qdrant_client import QdrantClient as QdrantSdkClient
 from qdrant_client.http.exceptions import ApiException
@@ -10,6 +10,7 @@ from qdrant_client.models import (
     Filter,
     HasIdCondition,
     MatchValue,
+    PayloadSchemaType,
     PointStruct,
     VectorParams,
 )
@@ -27,6 +28,7 @@ class QdrantClient:
                     collection_name=self._collection,
                     vectors_config=VectorParams(size=len(vector), distance=Distance.COSINE),
                 )
+            self._ensure_type_index()
             self._client.upsert(
                 collection_name=self._collection,
                 points=[PointStruct(id=point_id, vector=vector, payload=payload)],
@@ -43,6 +45,7 @@ class QdrantClient:
         excluded_ids: set[str] | None = None,
     ) -> list[str]:
         try:
+            self._ensure_type_index()
             must: list[Any] | None = (
                 [FieldCondition(key="type", match=MatchValue(value=title_type))]
                 if title_type is not None
@@ -68,3 +71,34 @@ class QdrantClient:
             for point in response.points
             if (payload := point.payload) and payload.get("title_id")
         ]
+
+    def vectors(self, point_ids: list[str]) -> dict[str, list[float]]:
+        try:
+            records = self._client.retrieve(
+                collection_name=self._collection,
+                ids=point_ids,
+                with_payload=False,
+                with_vectors=True,
+            )
+        except ApiException as error:
+            raise RuntimeError("Qdrant vector retrieval failed.") from error
+        vectors: dict[str, list[float]] = {}
+        for record in records:
+            vector = record.vector
+            if not isinstance(vector, list) or not all(
+                isinstance(component, (float, int)) for component in vector
+            ):
+                continue
+            vectors[str(record.id)] = cast(list[float], vector)
+        return vectors
+
+    def _ensure_type_index(self) -> None:
+        collection = self._client.get_collection(self._collection)
+        if "type" in collection.payload_schema:
+            return
+        self._client.create_payload_index(
+            collection_name=self._collection,
+            field_name="type",
+            field_schema=PayloadSchemaType.KEYWORD,
+            wait=True,
+        )

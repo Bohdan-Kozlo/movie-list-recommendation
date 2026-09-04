@@ -3,9 +3,9 @@ import { useNavigate, useParams } from 'react-router'
 
 import { fetchCatalogueTitle, posterUrl } from './api'
 import { CatalogueMessage } from './CatalogueMessage'
-import { AccountMenu } from '../auth/AccountMenu'
 import { InteractionControls } from '../interactions/InteractionControls'
 import { SimilarTitles } from '../recommendations/SimilarTitles'
+import { SiteHeader } from '../navigation/SiteHeader'
 
 export function TitleDetailsPage() {
   const navigate = useNavigate()
@@ -26,7 +26,7 @@ export function TitleDetailsPage() {
   return (
     <main className="min-h-screen bg-background text-foreground">
       <div className="min-h-[min(54rem,100vh)] bg-[#162636] bg-cover bg-center bg-no-repeat" style={backdrop ? { backgroundImage: `linear-gradient(90deg, #172331 8%, rgba(23,35,49,.84) 42%, rgba(23,35,49,.28)), url(${backdrop})` } : undefined}>
-        <header className="mx-auto flex min-h-21 w-[92vw] items-center justify-between gap-4 border-b border-[#dae6ed]/35"><button className="font-display text-[clamp(1.2rem,2vw,1.65rem)] font-bold tracking-[-.055em]" onClick={onBack}>REEL / INDEX</button><div className="flex items-center gap-4"><AccountMenu /><button className="border-b border-current pb-0.5" onClick={onBack}>← Catalogue</button></div></header>
+        <div className="mx-auto w-[92vw]"><SiteHeader className="border-[#dae6ed]/35" /></div>
         <section className="mx-auto grid w-[84vw] max-w-280 grid-cols-[minmax(11rem,19rem)_minmax(0,42rem)] items-end gap-[clamp(2rem,6vw,7rem)] py-[clamp(4rem,12vh,10rem)] pb-20 max-md:grid-cols-1 max-md:pt-16">
           <div className="aspect-2/3 w-full max-w-76 overflow-hidden bg-[#31485c] max-md:w-48">{poster ? <img className="h-full w-full object-cover" src={poster} alt="" /> : <span className="grid h-full w-full place-items-center font-display italic leading-[1.1] text-muted-foreground">No image<br />available</span>}</div>
           <div>

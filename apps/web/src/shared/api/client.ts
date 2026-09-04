@@ -17,8 +17,8 @@ export function apiUrl(path: string): string {
 export async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
   const response = await fetch(apiUrl(path), { ...init, credentials: 'include' })
   if (!response.ok) throw new ApiError(await errorMessage(response), response.status)
-  if (response.status === 204) return undefined as T
-  return response.json() as Promise<T>
+  const body = await response.text()
+  return body ? JSON.parse(body) as T : undefined as T
 }
 
 export async function authenticatedApiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {

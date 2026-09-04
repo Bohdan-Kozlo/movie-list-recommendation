@@ -69,10 +69,12 @@ class GetPersonalRecommendations:
 
     def _profile_vector(self, ratings: list[RatedTitle]) -> list[float]:
         weighted_vectors: list[tuple[float, list[float]]] = []
+        stored_vectors = self._index.vectors([rating.title.id for rating in ratings])
         for rating in ratings:
             weight = rating.value - 3.0
             if weight:
-                weighted_vectors.append((weight, self._index.embed(rating.title)))
+                vector = stored_vectors.get(rating.title.id) or self._index.embed(rating.title)
+                weighted_vectors.append((weight, vector))
         if not weighted_vectors:
             return []
         dimensions = len(weighted_vectors[0][1])

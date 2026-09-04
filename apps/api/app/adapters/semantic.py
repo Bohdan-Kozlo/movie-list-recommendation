@@ -22,6 +22,9 @@ class SemanticTitleIndexer:
     def embed(self, title: TitleDetails) -> list[float]:
         return self._embeddings.embed(self._text(title))
 
+    def vectors(self, title_ids: list[str]) -> dict[str, list[float]]:
+        return self._vectors.vectors(title_ids)
+
     def search_profile(
         self, vector: list[float], title_type: str, limit: int, excluded_ids: set[str]
     ) -> list[str]:

@@ -69,6 +69,9 @@ class FakePersonalIndex(FakeSemanticIndex):
     def embed(self, source: TitleDetails) -> list[float]:
         return [float(len(source.title)), 1.0]
 
+    def vectors(self, title_ids: list[str]) -> dict[str, list[float]]:
+        return {}
+
     def search_profile(
         self, vector: list[float], title_type: str, limit: int, excluded_ids: set[str]
     ) -> list[str]:

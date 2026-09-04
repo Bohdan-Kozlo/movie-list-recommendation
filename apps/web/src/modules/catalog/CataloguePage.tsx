@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { FormEvent, useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router'
+import { useNavigate } from 'react-router'
 
 import {
   BrowseParameters,
@@ -13,7 +13,8 @@ import {
   searchTmdbTitles,
 } from './api'
 import { CatalogueMessage } from './CatalogueMessage'
-import { AccountMenu } from '../auth/AccountMenu'
+import { QuickLibraryActions } from '../interactions/QuickLibraryActions'
+import { SiteHeader } from '../navigation/SiteHeader'
 
 const initialParameters: BrowseParameters = {
   query: '',
@@ -66,12 +67,7 @@ export function CataloguePage() {
 
   return (
     <main className="mx-auto w-full max-w-360 px-[4vw] pb-16">
-      <header className="flex min-h-21 items-center justify-between gap-4 border-b">
-        <Link className="font-display text-[clamp(1.2rem,2vw,1.65rem)] font-bold tracking-[-.055em]" to="/catalogue" onClick={resetFilters}>
-          REEL / INDEX
-        </Link>
-        <div className="flex items-center gap-4"><p className="hidden font-mono text-xs uppercase tracking-[.045em] text-[#d0dbe3] md:block">English films &amp; series · selected by signal</p><AccountMenu /></div>
-      </header>
+      <SiteHeader onBrandClick={resetFilters} />
 
       <section className="grid grid-cols-[minmax(5rem,.35fr)_1fr] gap-x-8 border-b py-[clamp(2.5rem,6vw,5.5rem)] max-md:grid-cols-1" aria-labelledby="catalogue-title">
         <p className="m-0 mt-2 font-mono text-xs font-bold uppercase tracking-[.12em] text-primary max-md:mb-5">The catalogue</p>
@@ -180,9 +176,12 @@ function TitleCard({ title, onOpen }: { title: CatalogueTitle; onOpen: (titleId:
   const poster = posterUrl(title.posterPath)
   return (
     <article className="min-w-0">
-      <button className="group block aspect-2/3 w-full overflow-hidden bg-[#31485c]" onClick={() => onOpen(title.id)} aria-label={`Open ${title.title}`}>
-        {poster ? <img className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.045] motion-reduce:transition-none" src={poster} alt="" /> : <span className="grid h-full w-full place-items-center font-display italic leading-[1.1] text-muted-foreground">No image<br />available</span>}
-      </button>
+      <div className="group relative aspect-2/3 overflow-hidden bg-[#31485c]">
+        <button className="block h-full w-full" onClick={() => onOpen(title.id)} aria-label={`Open ${title.title}`}>
+          {poster ? <img className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.045] motion-reduce:transition-none" src={poster} alt="" /> : <span className="grid h-full w-full place-items-center font-display italic leading-[1.1] text-muted-foreground">No image<br />available</span>}
+        </button>
+        <QuickLibraryActions titleId={title.id} />
+      </div>
       <div className="pt-3">
         <p className="m-0 font-mono text-xs uppercase tracking-[.045em] text-[#d0dbe3]">{title.type === 'movie' ? 'Film' : 'Series'} · {title.releaseDate?.slice(0, 4) ?? '—'}</p>
         <h2 className="my-1.5 font-display text-[clamp(1.3rem,1.8vw,1.8rem)] font-semibold leading-[1.05] tracking-[-.035em]"><button className="text-left" onClick={() => onOpen(title.id)}>{title.title}</button></h2>
