@@ -1,9 +1,12 @@
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from os import getenv
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
+from app.core.database import dispose_database_engines
 from app.modules.auth.api import router as auth_router
 from app.modules.catalog.api import router as catalogue_router
 from app.modules.interactions.api import router as interactions_router
@@ -17,7 +20,16 @@ if not oauth_state_secret:
         raise RuntimeError("AUTH_SESSION_SECRET must be configured outside development.")
     oauth_state_secret = "development-only-oauth-state-secret"
 
-app = FastAPI(title="Movie List Recommendation API")
+
+@asynccontextmanager
+async def lifespan(application: FastAPI) -> AsyncIterator[None]:
+    try:
+        yield
+    finally:
+        dispose_database_engines()
+
+
+app = FastAPI(title="Movie List Recommendation API", lifespan=lifespan)
 app.add_middleware(
     SessionMiddleware,
     secret_key=oauth_state_secret,

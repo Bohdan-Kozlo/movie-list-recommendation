@@ -47,8 +47,9 @@ class FakeCatalogue:
 
 
 class FakeSemanticIndex:
-    def __init__(self, identifiers: list[str]) -> None:
+    def __init__(self, identifiers: list[str], existing: set[str] | None = None) -> None:
         self.identifiers = identifiers
+        self.existing = existing or set()
         self.source: TitleDetails | None = None
         self.indexed: list[str] = []
 
@@ -59,6 +60,9 @@ class FakeSemanticIndex:
 
     def index(self, title: TitleDetails) -> None:
         self.indexed.append(title.id)
+
+    def existing_ids(self, title_ids: list[str]) -> set[str]:
+        return self.existing.intersection(title_ids)
 
 
 class FakePersonalIndex(FakeSemanticIndex):
@@ -131,7 +135,7 @@ def test_similar_titles_use_a_truthful_semantic_fallback_reason() -> None:
     assert result[0].reason == "Similar in synopsis and indexed metadata."
 
 
-def test_catalogue_sync_indexer_can_rebuild_all_derived_vectors() -> None:
+def test_catalogue_indexer_skips_titles_that_already_have_vectors() -> None:
     source = title("source", "Source", genres=["Drama"], keywords=[])
     match = title("match", "Match", genres=["Comedy"], keywords=[])
 
@@ -139,9 +143,31 @@ def test_catalogue_sync_indexer_can_rebuild_all_derived_vectors() -> None:
         def all_details(self) -> list[TitleDetails]:
             return [source, match]
 
-    index = FakeSemanticIndex([])
+    index = FakeSemanticIndex([], existing={"source"})
 
-    assert IndexCatalogue(IndexableCatalogue(), index).execute() == 2
+    report = IndexCatalogue(IndexableCatalogue(), index).execute(batch_size=1)
+
+    assert report.scanned == 2
+    assert report.indexed == 1
+    assert report.skipped == 1
+    assert index.indexed == ["match"]
+
+
+def test_catalogue_sync_indexer_rebuilds_existing_vectors() -> None:
+    source = title("source", "Source", genres=["Drama"], keywords=[])
+    match = title("match", "Match", genres=["Comedy"], keywords=[])
+
+    class IndexableCatalogue:
+        def all_details(self) -> list[TitleDetails]:
+            return [source, match]
+
+    index = FakeSemanticIndex([], existing={"source", "match"})
+
+    report = IndexCatalogue(IndexableCatalogue(), index).execute(only_missing=False)
+
+    assert report.scanned == 2
+    assert report.indexed == 2
+    assert report.skipped == 0
     assert index.indexed == ["source", "match"]
 
 

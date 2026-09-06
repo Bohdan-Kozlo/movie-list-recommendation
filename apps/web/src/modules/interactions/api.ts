@@ -19,7 +19,7 @@ export type LibraryResponse = {
 
 export async function fetchInteractionStatus(titleId: string): Promise<InteractionStatus | null> {
   try {
-    return await interactionApiRequest<InteractionStatus>(`/interactions/titles/${titleId}`)
+    return await authenticatedApiRequest<InteractionStatus>(`/interactions/titles/${titleId}`)
   } catch (error) {
     if (error instanceof ApiError && error.status === 401) return null
     throw new Error('Library status is unavailable.')
@@ -64,7 +64,7 @@ export function removeNotInterested(titleId: string): Promise<void> {
 
 export async function fetchLibrary(collection: LibraryCollection): Promise<LibraryResponse> {
   try {
-    return await interactionApiRequest<LibraryResponse>(`/interactions/library/${collection}`)
+    return await authenticatedApiRequest<LibraryResponse>(`/interactions/library/${collection}`)
   } catch (error) {
     if (error instanceof ApiError && error.status === 401) throw new Error('Sign in to view your library.')
     throw new Error('Your library is unavailable.')
@@ -73,11 +73,9 @@ export async function fetchLibrary(collection: LibraryCollection): Promise<Libra
 
 async function interactionRequest(path: string, init: RequestInit): Promise<void> {
   try {
-    await interactionApiRequest<void>(path, init)
+    await authenticatedApiRequest<void>(path, init)
   } catch (error) {
     if (error instanceof ApiError) throw new Error(error.message)
     throw new Error('Your library could not be updated. Please try again.')
   }
 }
-
-const interactionApiRequest = authenticatedApiRequest

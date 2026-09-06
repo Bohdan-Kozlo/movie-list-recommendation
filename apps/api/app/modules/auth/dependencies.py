@@ -1,14 +1,13 @@
 """Composition root for auth adapters and independent use cases."""
 
 from dataclasses import dataclass
-from functools import lru_cache
 from typing import Annotated
 
 from fastapi import Cookie, Depends, HTTPException
 
 from app.adapters.postgres.auth_repository import SqlAlchemyAuthRepository
 from app.core.config import Settings
-from app.core.database import create_database_engine
+from app.core.database import get_database_engine
 from app.modules.auth.domain import InvalidCredentialsError, User
 from app.modules.auth.security import Argon2PasswordManager, JwtTokenManager
 from app.modules.auth.use_cases import (
@@ -52,9 +51,8 @@ def authentication_required() -> HTTPException:
     return HTTPException(status_code=401, detail="Authentication required.")
 
 
-@lru_cache
 def configured_auth_use_cases(database_url: str, jwt_secret: str) -> AuthUseCases:
-    repository = SqlAlchemyAuthRepository(create_database_engine(database_url))
+    repository = SqlAlchemyAuthRepository(get_database_engine(database_url))
     passwords = Argon2PasswordManager()
     tokens = JwtTokenManager(jwt_secret)
     return AuthUseCases(

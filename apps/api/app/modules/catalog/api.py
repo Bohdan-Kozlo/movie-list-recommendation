@@ -7,9 +7,9 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from app.adapters.tmdb.client import TmdbNotFoundError
 from app.modules.catalog.dependencies import (
     CatalogueUseCases,
-    ExternalCatalogueUseCases,
     get_catalogue_use_cases,
-    get_external_catalogue_use_cases,
+    get_import_tmdb_title_use_case,
+    get_search_external_titles_use_case,
 )
 from app.modules.catalog.dto import (
     CatalogueFacetsResponse,
@@ -22,6 +22,7 @@ from app.modules.catalog.dto import (
     to_facets_response,
     to_page_response,
 )
+from app.modules.catalog.use_cases import ImportTmdbTitle, SearchExternalTitles
 
 router = APIRouter(prefix="/catalogue", tags=["catalogue"])
 
@@ -45,13 +46,13 @@ def list_titles(
 
 @router.get("/tmdb-search", response_model=ExternalTitleSearchResponse)
 def search_tmdb_titles(
-    use_cases: Annotated[ExternalCatalogueUseCases, Depends(get_external_catalogue_use_cases)],
+    use_case: Annotated[SearchExternalTitles, Depends(get_search_external_titles_use_case)],
     query: Annotated[str, Query(min_length=1, max_length=200)],
     title_type: Annotated[str | None, Query(alias="type", pattern="^(movie|tv)$")] = None,
 ) -> ExternalTitleSearchResponse:
     """Find externally available titles when local search has no match."""
     try:
-        titles = use_cases.search_external_titles.execute(query, title_type)
+        titles = use_case.execute(query, title_type)
     except RuntimeError as error:
         raise HTTPException(status_code=503, detail="TMDB search is unavailable.") from error
     return ExternalTitleSearchResponse(
@@ -63,11 +64,11 @@ def search_tmdb_titles(
 def import_tmdb_title(
     title_type: Annotated[str, Path(pattern="^(movie|tv)$")],
     tmdb_id: int,
-    use_cases: Annotated[ExternalCatalogueUseCases, Depends(get_external_catalogue_use_cases)],
+    use_case: Annotated[ImportTmdbTitle, Depends(get_import_tmdb_title_use_case)],
 ) -> TitleDetailsResponse:
     """Persist, embed, and index an explicitly selected TMDB title."""
     try:
-        title = use_cases.import_tmdb_title.execute(title_type, tmdb_id)
+        title = use_case.execute(title_type, tmdb_id)
     except TmdbNotFoundError as error:
         raise HTTPException(status_code=404, detail="TMDB title not found.") from error
     except RuntimeError as error:

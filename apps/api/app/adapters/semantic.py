@@ -2,6 +2,7 @@
 
 from app.adapters.ollama.client import OllamaEmbeddingClient
 from app.adapters.qdrant.client import QdrantClient
+from app.core.config import Settings
 from app.modules.catalog.domain import TitleDetails
 
 
@@ -15,6 +16,9 @@ class SemanticTitleIndexer:
     def index(self, title: TitleDetails) -> None:
         vector = self._embeddings.embed(self._text(title))
         self._vectors.upsert(title.id, vector, self._payload(title))
+
+    def existing_ids(self, title_ids: list[str]) -> set[str]:
+        return self._vectors.existing_ids(title_ids)
 
     def similar(self, source: TitleDetails, limit: int) -> list[str]:
         return self._vectors.search(self.embed(source), limit=limit, excluded_id=source.id)
@@ -56,3 +60,15 @@ class SemanticTitleIndexer:
             "genres": title.genres,
             "year": title.release_date.year if title.release_date else None,
         }
+
+
+def create_semantic_index(settings: Settings) -> SemanticTitleIndexer:
+    """Assemble the same embedding configuration for HTTP and CLI callers."""
+    return SemanticTitleIndexer(
+        OllamaEmbeddingClient(settings.ollama_base_url, settings.ollama_embedding_model),
+        QdrantClient(
+            settings.require_qdrant_url(),
+            settings.require_qdrant_api_key(),
+            settings.qdrant_collection,
+        ),
+    )

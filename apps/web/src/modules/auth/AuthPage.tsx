@@ -1,3 +1,4 @@
+import { authKeys } from './queries'
 import { FormEvent, useEffect, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from 'react-router'
@@ -21,7 +22,7 @@ export function AuthPage({ mode }: AuthPageProps) {
   const mutation = useMutation({
     mutationFn: () => action(email, password),
     onSuccess: async (user) => {
-      queryClient.setQueryData(['auth', 'me'], user)
+      queryClient.setQueryData(authKeys.currentUser, user)
       await navigateAfterAuthentication(navigate)
     },
   })
@@ -33,18 +34,33 @@ export function AuthPage({ mode }: AuthPageProps) {
 
   return (
     <main className="grid min-h-screen place-items-center p-8">
-      <Card className="w-full max-w-124 bg-card p-[clamp(1.8rem,6vw,4.5rem)] shadow-[0_1.5rem_4rem_rgba(5,12,20,.28)]" aria-labelledby="auth-title">
-        <Button asChild className="font-display text-[clamp(1.2rem,2vw,1.65rem)] font-bold tracking-[-.055em]" variant="ghost" size="compact">
+      <Card
+        className="w-full max-w-124 bg-card p-[clamp(1.8rem,6vw,4.5rem)] shadow-[0_1.5rem_4rem_rgba(5,12,20,.28)]"
+        aria-labelledby="auth-title"
+      >
+        <Button
+          asChild
+          className="font-display text-[clamp(1.2rem,2vw,1.65rem)] font-bold tracking-[-.055em]"
+          variant="ghost"
+          size="compact"
+        >
           <Link to="/catalogue">
-          REEL / INDEX
+            REEL / INDEX
           </Link>
         </Button>
         <p className="mt-14 font-mono text-xs font-bold uppercase tracking-[.12em] text-primary">Your index</p>
-        <h1 id="auth-title" className="my-2 max-w-[9ch] font-display text-[clamp(2.8rem,7vw,5.4rem)] font-semibold leading-[.92] tracking-[-.055em]">{mode === 'register' ? 'Make your watchlist personal.' : 'Welcome back.'}</h1>
+        <h1
+          id="auth-title"
+          className="my-2 max-w-[9ch] font-display text-[clamp(2.8rem,7vw,5.4rem)] font-semibold leading-[.92] tracking-[-.055em]"
+        >
+          {mode === 'register' ? 'Make your watchlist personal.' : 'Welcome back.'}
+        </h1>
         <p className="leading-6 text-muted-foreground">
-          {mode === 'register'
-            ? 'Save your ratings and build a recommendation profile.'
-            : 'Pick up your catalogue and recommendations where you left off.'}
+          {
+            mode === 'register'
+              ? 'Save your ratings and build a recommendation profile.'
+              : 'Pick up your catalogue and recommendations where you left off.'
+          }
         </p>
         <form className="mt-8 grid gap-4" onSubmit={submit}>
           <label className="grid gap-2 font-mono text-xs font-bold uppercase tracking-[.1em] text-muted-foreground">
@@ -71,10 +87,16 @@ export function AuthPage({ mode }: AuthPageProps) {
           Continue with Google
         </Button>
         <p className="mt-6 text-muted-foreground">
-          {mode === 'register' ? 'Already have an account?' : 'New to Reel / Index?'}{' '}
-          <Button asChild className="h-auto border-b border-current p-0 pb-0.5 text-[#d9e4eb] hover:bg-transparent" variant="ghost" size="compact">
+          {mode === 'register' ? 'Already have an account?' : 'New to Reel / Index?'}
+          {' '}
+          <Button
+            asChild
+            className="h-auto border-b border-current p-0 pb-0.5 text-[#d9e4eb] hover:bg-transparent"
+            variant="ghost"
+            size="compact"
+          >
             <Link to={mode === 'register' ? '/auth/sign-in' : '/auth/register'}>
-            {mode === 'register' ? 'Sign in' : 'Create one'}
+              {mode === 'register' ? 'Sign in' : 'Create one'}
             </Link>
           </Button>
         </p>
@@ -97,7 +119,7 @@ export function AuthCallbackPage() {
     fetchCurrentUser()
       .then(async (user) => {
         if (!user) throw new Error()
-        queryClient.setQueryData(['auth', 'me'], user)
+        queryClient.setQueryData(authKeys.currentUser, user)
         setMessage('Signed in. Your account is ready.')
         await navigateAfterAuthentication(navigate)
       })
@@ -107,16 +129,23 @@ export function AuthCallbackPage() {
   return (
     <main className="grid min-h-screen place-items-center p-8">
       <Card className="min-h-72 w-full max-w-124 bg-card p-[clamp(1.8rem,6vw,4.5rem)] shadow-[0_1.5rem_4rem_rgba(5,12,20,.28)]">
-        <Button asChild className="font-display text-[clamp(1.2rem,2vw,1.65rem)] font-bold tracking-[-.055em]" variant="ghost" size="compact">
+        <Button
+          asChild
+          className="font-display text-[clamp(1.2rem,2vw,1.65rem)] font-bold tracking-[-.055em]"
+          variant="ghost"
+          size="compact"
+        >
           <Link to="/catalogue">
-          REEL / INDEX
+            REEL / INDEX
           </Link>
         </Button>
         <p className="mt-14 font-mono text-xs font-bold uppercase tracking-[.12em] text-primary">Account</p>
-        <h1 className="my-2 max-w-[9ch] font-display text-[clamp(2.8rem,7vw,5.4rem)] font-semibold leading-[.92] tracking-[-.055em]">{message}</h1>
+        <h1 className="my-2 max-w-[9ch] font-display text-[clamp(2.8rem,7vw,5.4rem)] font-semibold leading-[.92] tracking-[-.055em]">
+          {message}
+        </h1>
         <Button asChild className="w-full">
           <Link to="/catalogue">
-          Browse the catalogue
+            Browse the catalogue
           </Link>
         </Button>
       </Card>

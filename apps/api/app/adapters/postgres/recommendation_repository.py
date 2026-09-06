@@ -5,7 +5,7 @@ from uuid import UUID
 from sqlalchemy import Engine, select
 from sqlalchemy.orm import Session, selectinload
 
-from app.adapters.postgres.mappers.catalogue import to_title_details
+from app.adapters.postgres.catalogue_repository import SqlAlchemyCatalogueRepository
 from app.adapters.postgres.mappers.recommendations import to_rated_title
 from app.modules.catalog.domain import TitleDetails
 from app.modules.catalog.models import CatalogueTitle
@@ -18,19 +18,10 @@ class SqlAlchemyPersonalRecommendationRepository:
 
     def __init__(self, engine: Engine) -> None:
         self._engine = engine
+        self._catalogue = SqlAlchemyCatalogueRepository(engine)
 
     def details(self, title_id: str) -> TitleDetails | None:
-        try:
-            canonical_id = UUID(title_id)
-        except ValueError:
-            return None
-        with Session(self._engine) as session:
-            title = session.scalar(
-                select(CatalogueTitle)
-                .where(CatalogueTitle.id == canonical_id)
-                .options(selectinload(CatalogueTitle.genres))
-            )
-        return to_title_details(title) if title is not None else None
+        return self._catalogue.details(title_id)
 
     def rated_titles(self, user_id: UUID) -> list[RatedTitle]:
         with Session(self._engine) as session:

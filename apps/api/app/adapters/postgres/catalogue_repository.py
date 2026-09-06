@@ -5,7 +5,11 @@ from uuid import UUID
 from sqlalchemy import Engine, Select, func, select
 from sqlalchemy.orm import Session, selectinload
 
-from app.adapters.postgres.mappers.catalogue import to_title_details, to_title_summary
+from app.adapters.postgres.mappers.catalogue import (
+    apply_synced_metadata,
+    to_title_details,
+    to_title_summary,
+)
 from app.modules.catalog.domain import CatalogueFacets, CataloguePage, CatalogueQuery, TitleDetails
 from app.modules.catalog.models import CatalogueTitle, ExternalIdentifier, Genre
 from app.modules.catalog.sync import SyncedTitle
@@ -120,24 +124,7 @@ class SqlAlchemyCatalogueRepository:
                 session.add(title)
             else:
                 title = identifier.title
-            title.title_type = synced_title.title_type
-            title.title = synced_title.title
-            title.original_title = synced_title.original_title
-            title.overview = synced_title.overview
-            title.original_language = synced_title.original_language.lower()
-            title.release_date = synced_title.release_date
-            title.release_year = (
-                synced_title.release_date.year if synced_title.release_date else None
-            )
-            title.runtime_minutes = synced_title.runtime_minutes
-            title.poster_path = synced_title.poster_path
-            title.backdrop_path = synced_title.backdrop_path
-            title.popularity = synced_title.popularity
-            title.vote_average = synced_title.vote_average
-            title.tagline = synced_title.tagline
-            title.cast = synced_title.cast
-            title.creators = synced_title.creators
-            title.keywords = synced_title.keywords
+            apply_synced_metadata(title, synced_title)
             title.genres = self._genres(session, synced_title)
             self._replace_imdb_id(title, synced_title.imdb_id)
         return created

@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 
 from app.modules.catalog.domain import TitleDetails, TitleSummary
+from app.modules.recommendations.ranking import NEUTRAL_RATING
 
 
 @dataclass(frozen=True)
@@ -72,8 +73,9 @@ def similarity_reason(source: TitleDetails, candidate: TitleDetails) -> str:
 
 def personal_reason(ratings: list[RatedTitle], candidate: TitleDetails) -> str:
     """Explain a personal result using one actual positive rating where possible."""
-    for rated in sorted(ratings, key=lambda item: (-item.value, item.title.id)):
-        if rated.value <= 3.0:
+    ordered_ratings = sorted(ratings, key=lambda item: (-item.value, item.title.id))
+    for rated in ordered_ratings:
+        if rated.value <= NEUTRAL_RATING:
             continue
         shared_genres = sorted(set(rated.title.genres).intersection(candidate.genres))
         if shared_genres:
@@ -94,11 +96,7 @@ def personal_reason(ratings: list[RatedTitle], candidate: TitleDetails) -> str:
                 f"rated {rated.value:.1f}/5."
             )
     positive = next(
-        (
-            rated
-            for rated in sorted(ratings, key=lambda item: (-item.value, item.title.id))
-            if rated.value > 3.0
-        ),
+        (rated for rated in ordered_ratings if rated.value > NEUTRAL_RATING),
         None,
     )
     if positive is not None:
@@ -107,3 +105,10 @@ def personal_reason(ratings: list[RatedTitle], candidate: TitleDetails) -> str:
     if negative is not None:
         return f"Balances against your {negative.value:.1f}/5 rating for {negative.title.title}."
     return "Personalized from your ratings."
+
+
+@dataclass(frozen=True)
+class IndexReport:
+    scanned: int
+    indexed: int
+    skipped: int

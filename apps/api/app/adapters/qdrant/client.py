@@ -36,6 +36,23 @@ class QdrantClient:
         except ApiException as error:
             raise RuntimeError("Qdrant vector upsert failed.") from error
 
+    def existing_ids(self, point_ids: list[str]) -> set[str]:
+        """Return the requested point IDs that already exist in the collection."""
+        if not point_ids:
+            return set()
+        try:
+            if not self._client.collection_exists(self._collection):
+                return set()
+            records = self._client.retrieve(
+                collection_name=self._collection,
+                ids=point_ids,
+                with_payload=False,
+                with_vectors=False,
+            )
+        except ApiException as error:
+            raise RuntimeError("Qdrant vector lookup failed.") from error
+        return {str(record.id) for record in records}
+
     def search(
         self,
         vector: list[float],

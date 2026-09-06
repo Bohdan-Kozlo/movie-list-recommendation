@@ -3,7 +3,8 @@ FROM python:3.13-slim
 WORKDIR /app
 
 COPY pyproject.toml uv.lock README.md ./
-RUN pip install --no-cache-dir uv && uv sync --locked --no-dev --group ml
+COPY ml/recsys ./ml/recsys
+RUN pip install --no-cache-dir uv && uv sync --locked --no-dev
 
 COPY apps/api ./apps/api
 

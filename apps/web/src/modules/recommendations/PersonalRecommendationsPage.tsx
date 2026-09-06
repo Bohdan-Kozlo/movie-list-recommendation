@@ -1,15 +1,16 @@
+import { recommendationKeys } from './queries'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router'
 
 import { ApiError } from '../../shared/api/client'
-import { posterUrl } from '../../shared/catalogue'
+import { RecommendationCard } from './RecommendationCard'
 import { fetchPersonalRecommendations, type SimilarTitle } from './api'
 import { Card } from '../../shared/ui/Card'
 import { SiteHeader } from '../navigation/SiteHeader'
 
 export function PersonalRecommendationsPage() {
   const query = useQuery({
-    queryKey: ['recommendations', 'personal'],
+    queryKey: recommendationKeys.personal,
     queryFn: fetchPersonalRecommendations,
   })
   if (query.isLoading) {
@@ -58,7 +59,14 @@ function RecommendationError({ error }: { error: Error }) {
       <Card className="max-w-xl p-8">
         <h1 className="font-display text-4xl">Your recommendations need a little setup.</h1>
         <p className="text-muted-foreground">{body}</p>
-        {needsSetup ? <Link className="inline-block rounded-sm border-primary bg-primary px-4 py-3 text-primary-foreground" to={destination}>{action}</Link> : null}
+        {
+          needsSetup ? <Link
+            className="inline-block rounded-sm border-primary bg-primary px-4 py-3 text-primary-foreground"
+            to={destination}
+          >
+            {action}
+          </Link> : null
+        }
       </Card>
     </main>
   )
@@ -70,36 +78,23 @@ function RecommendationSection({ title, items }: { title: string; items: Similar
       <p className="m-0 font-mono text-xs font-bold uppercase tracking-[.12em] text-primary">
         Personal picks
       </p>
-      <h2 id={`recommendations-${title}`} className="mt-2 font-display text-4xl font-semibold tracking-[-.05em]">
+      <h2
+        id={`recommendations-${title}`}
+        className="mt-2 font-display text-4xl font-semibold tracking-[-.05em]"
+      >
         {title}
       </h2>
-      {items.length === 0 ? (
-        <Card className="mt-6 p-6 text-muted-foreground">
-          Rate a few titles above 3.0 to give this section a clearer direction.
-        </Card>
-      ) : (
-        <div className="mt-7 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
-          {items.map((item) => <RecommendationCard key={item.id} item={item} />)}
-        </div>
-      )}
+      {
+        items.length === 0 ? (
+          <Card className="mt-6 p-6 text-muted-foreground">
+            Rate a few titles above 3.0 to give this section a clearer direction.
+          </Card>
+        ) : (
+          <div className="mt-7 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+            {items.map((item) => <RecommendationCard key={item.id} item={item} />)}
+          </div>
+        )
+      }
     </section>
-  )
-}
-
-function RecommendationCard({ item }: { item: SimilarTitle }) {
-  const poster = posterUrl(item.posterPath)
-  return (
-    <Link to={`/catalogue/${item.id}`} className="group grid gap-3">
-      <div className="aspect-2/3 overflow-hidden bg-card">
-        {poster ? <img className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" src={poster} alt="" /> : <span className="grid h-full place-items-center text-sm text-muted-foreground">No image</span>}
-      </div>
-      <div>
-        <p className="m-0 font-mono text-xs uppercase tracking-[.08em] text-primary">
-          {item.type === 'movie' ? 'Film' : 'TV series'}
-        </p>
-        <h3 className="mt-1 font-display text-2xl font-semibold leading-none">{item.title}</h3>
-        <p className="mb-0 mt-2 text-sm text-muted-foreground">{item.reason}</p>
-      </div>
-    </Link>
   )
 }

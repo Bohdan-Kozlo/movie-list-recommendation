@@ -1,11 +1,10 @@
 """Composition root for user-library interaction use cases."""
 
 from dataclasses import dataclass
-from functools import lru_cache
 
 from app.adapters.postgres.interaction_repository import SqlAlchemyInteractionRepository
 from app.core.config import Settings
-from app.core.database import create_database_engine
+from app.core.database import get_database_engine
 from app.modules.interactions.use_cases import (
     AddNotInterested,
     AddWatchlist,
@@ -38,9 +37,8 @@ def get_interaction_use_cases() -> InteractionUseCases:
     return configured_interaction_use_cases(Settings.from_environment().database_url)
 
 
-@lru_cache
 def configured_interaction_use_cases(database_url: str) -> InteractionUseCases:
-    repository = SqlAlchemyInteractionRepository(create_database_engine(database_url))
+    repository = SqlAlchemyInteractionRepository(get_database_engine(database_url))
     return InteractionUseCases(
         create_rating=CreateRating(repository),
         delete_rating=DeleteRating(repository),

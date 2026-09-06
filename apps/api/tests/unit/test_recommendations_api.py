@@ -4,7 +4,7 @@ from types import SimpleNamespace
 from app.adapters.tmdb.client import TmdbNotFoundError
 from app.main import app
 from app.modules.auth.dependencies import get_current_user
-from app.modules.catalog.dependencies import get_external_catalogue_use_cases
+from app.modules.catalog.dependencies import get_import_tmdb_title_use_case
 from app.modules.catalog.domain import TitleDetails, TitleSummary
 from app.modules.onboarding.dependencies import (
     get_onboarding_use_cases,
@@ -72,9 +72,7 @@ def test_unknown_tmdb_title_returns_not_found_during_import() -> None:
         def execute(self, title_type: str, tmdb_id: int) -> None:
             raise TmdbNotFoundError
 
-    app.dependency_overrides[get_external_catalogue_use_cases] = lambda: SimpleNamespace(
-        import_tmdb_title=FailingImport()
-    )
+    app.dependency_overrides[get_import_tmdb_title_use_case] = FailingImport
     response = TestClient(app).post("/catalogue/tmdb-titles/movie/999")
     app.dependency_overrides.clear()
 
