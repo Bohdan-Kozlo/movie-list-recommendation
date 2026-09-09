@@ -5,6 +5,7 @@ from uuid import UUID
 
 from app.modules.catalog.domain import TitleDetails
 from app.modules.recommendations.domain import RatedTitle
+from app.modules.recommendations.tonight import TonightPreferences
 
 
 class SimilarityCatalogue(Protocol):
@@ -33,6 +34,16 @@ class PersonalRecommendationRepository(SimilarityCatalogue, Protocol):
 
 class IndexableCatalogue(Protocol):
     def all_details(self) -> list[TitleDetails]: ...
+
+
+class TonightRepository(PersonalRecommendationRepository, Protocol):
+    def eligible_title_ids(self, preferences: TonightPreferences) -> set[str]: ...
+
+
+class TonightIndex(SemanticTitleIndex, Protocol):
+    def search_tonight(
+        self, vector: list[float], title_type: str, eligible_ids: set[str], limit: int
+    ) -> list[str]: ...
 
 
 class IndexableSemanticTitleIndex(Protocol):

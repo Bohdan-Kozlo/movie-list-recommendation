@@ -11,7 +11,8 @@ from app.modules.recommendations.domain import (
     to_title_summary,
 )
 from app.modules.recommendations.ports import PersonalRecommendationRepository, SemanticTitleIndex
-from app.modules.recommendations.ranking import NEUTRAL_RATING, fits_diversity, profile_vector
+from app.modules.recommendations.profile import build_rating_profile
+from app.modules.recommendations.ranking import fits_diversity
 
 RESULT_LIMIT = 12
 CANDIDATE_LIMIT = 60
@@ -63,11 +64,4 @@ class GetPersonalRecommendations:
         ]
 
     def _profile_vector(self, ratings: list[RatedTitle]) -> list[float]:
-        weighted_vectors: list[tuple[float, list[float]]] = []
-        stored_vectors = self._index.vectors([rating.title.id for rating in ratings])
-        for rating in ratings:
-            weight = rating.value - NEUTRAL_RATING
-            if weight:
-                vector = stored_vectors.get(rating.title.id) or self._index.embed(rating.title)
-                weighted_vectors.append((weight, vector))
-        return profile_vector(weighted_vectors)
+        return build_rating_profile(ratings, self._index)

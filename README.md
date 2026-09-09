@@ -4,6 +4,28 @@ English-language movie and TV catalogue with ratings, a personal library, requir
 
 Start with [Project Structure](docs/PROJECT_STRUCTURE.md) for the code reading path, [Architecture](docs/ARCHITECTURE.md) for the request flow, [Specification](docs/SPEC.md) for product rules and [Libraries](docs/LIBRARIES.md) for approved dependencies.
 
+## What should I watch tonight?
+
+Open **Tonight** in the navigation (`/tonight`). After signing in and completing ten
+ratings, choose a movie or TV series, any matching genres, an inclusive year range,
+and an optional maximum runtime. TV time limits refer to the catalogued episode runtime,
+and TV years refer to the series premiere. Unknown runtimes cannot satisfy a time limit.
+
+**Close to my taste** prioritizes personal similarity. **More variety** reduces repetition
+among taste-related candidates. Both return up to six picks and exclude rated, watched
+and not-interested titles. These preferences apply only to the current request.
+
+`POST /recommendations/tonight` accepts `type` (`movie` or `tv`), `genres` (OR semantics),
+`max_minutes` (1–1440), `year_from`/`year_to` (1800–2100), and `mode` (`familiar` or
+`discover`). Optional numeric filters accept `null`. Responses contain `items` and
+`status`: `ready`, `no_profile`, or `no_matches`. Empty results never silently relax filters.
+
+Canonical SQL filters restrict eligible IDs before vector search, so unsuitable top
+matches cannot crowd out valid picks. The existing rating profile retrieves at most 60
+indexed candidates; MMR selects six using relevance weights 0.9 (familiar) or 0.55
+(discover). These are initial policy values, not empirically optimized quality claims.
+The existing catalogue schema and Qdrant payload work without migration or reindexing.
+
 ## Local development
 
 Run commands from the repository root. Install Python 3.13+, uv, Node.js and the pnpm version declared in `package.json`. Copy `.env.example` to `.env` if you have not already configured it. Set the database connection, TMDB credentials, Qdrant Cloud URL/key and long random authentication secrets. Keep credentials local.

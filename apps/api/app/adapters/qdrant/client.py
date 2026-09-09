@@ -60,7 +60,10 @@ class QdrantClient:
         excluded_id: str | None = None,
         title_type: str | None = None,
         excluded_ids: set[str] | None = None,
+        eligible_ids: set[str] | None = None,
     ) -> list[str]:
+        if eligible_ids is not None and not eligible_ids:
+            return []
         try:
             self._ensure_type_index()
             must: list[Any] | None = (
@@ -74,6 +77,8 @@ class QdrantClient:
             must_not: list[Any] | None = (
                 [HasIdCondition(has_id=sorted(excluded))] if excluded else None
             )
+            if eligible_ids is not None:
+                must = [*(must or []), HasIdCondition(has_id=sorted(eligible_ids))]
             response = self._client.query_points(
                 collection_name=self._collection,
                 query=vector,

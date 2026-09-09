@@ -36,6 +36,13 @@ class SemanticTitleIndexer:
             vector, limit=limit, title_type=title_type, excluded_ids=excluded_ids
         )
 
+    def search_tonight(
+        self, vector: list[float], title_type: str, eligible_ids: set[str], limit: int
+    ) -> list[str]:
+        return self._vectors.search(
+            vector, limit=limit, title_type=title_type, eligible_ids=eligible_ids
+        )
+
     @staticmethod
     def _text(title: TitleDetails) -> str:
         cast_names = [member["name"] for member in title.cast if member.get("name")]

@@ -9,6 +9,7 @@ from app.modules.onboarding.dependencies import require_completed_onboarding
 from app.modules.recommendations.dependencies import (
     get_personal_recommendations_use_case,
     get_similar_titles_use_case,
+    get_tonight_recommendations_use_case,
 )
 from app.modules.recommendations.dto import (
     PersonalRecommendationsResponse,
@@ -16,9 +17,30 @@ from app.modules.recommendations.dto import (
     to_personal_recommendations_response,
     to_similar_titles_response,
 )
+from app.modules.recommendations.tonight_dto import (
+    TonightRequest,
+    TonightResponse,
+    to_tonight_preferences,
+    to_tonight_response,
+)
 from app.modules.recommendations.use_cases import GetPersonalRecommendations, GetSimilarTitles
+from app.modules.recommendations.use_cases.get_tonight_recommendations import (
+    GetTonightRecommendations,
+)
 
 router = APIRouter(prefix="/recommendations", tags=["recommendations"])
+
+
+@router.post("/tonight", response_model=TonightResponse)
+def get_tonight_recommendations(
+    request: TonightRequest,
+    user: Annotated[User, Depends(require_completed_onboarding)],
+    use_case: Annotated[GetTonightRecommendations, Depends(get_tonight_recommendations_use_case)],
+) -> TonightResponse:
+    try:
+        return to_tonight_response(use_case.execute(user.id, to_tonight_preferences(request)))
+    except RuntimeError as error:
+        raise HTTPException(status_code=503, detail="Tonight's picks are unavailable.") from error
 
 
 @router.get("/personal", response_model=PersonalRecommendationsResponse)
