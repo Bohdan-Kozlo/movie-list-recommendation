@@ -1,94 +1,70 @@
 # Movie List Recommendation
 
-English-language movie and TV catalogue with ratings, a personal library, required taste onboarding, semantic similar titles and content-based personal recommendations.
+A movie and TV-series discovery app built around a local catalogue. Visitors can browse titles, search by name or English description, and find semantically similar titles. Signed-in users can rate titles, manage a personal library, complete taste onboarding, and receive content-based recommendations or a short “Tonight” shortlist.
 
-Start with [Project Structure](docs/PROJECT_STRUCTURE.md) for the code reading path, [Architecture](docs/ARCHITECTURE.md) for the request flow, [Specification](docs/SPEC.md) for product rules and [Libraries](docs/LIBRARIES.md) for approved dependencies.
+PostgreSQL is the canonical catalogue and user-data store. Ollama creates embeddings, while Qdrant stores derived vectors for semantic search and recommendations.
 
-## What should I watch tonight?
+## Technology
 
-Open **Tonight** in the navigation (`/tonight`). After signing in and completing ten
-ratings, choose a movie or TV series, any matching genres, an inclusive year range,
-and an optional maximum runtime. TV time limits refer to the catalogued episode runtime,
-and TV years refer to the series premiere. Unknown runtimes cannot satisfy a time limit.
+- **Web:** React, TypeScript, Vite, Tailwind CSS, shadcn/ui, TanStack Query
+- **API:** FastAPI, SQLAlchemy, Alembic, Authlib, JWT cookies
+- **Data and AI:** PostgreSQL, Ollama (`qwen3-embedding:0.6b`), Qdrant Cloud, TMDB
+- **Tooling:** Python 3.13, uv, pnpm, Docker Compose, pytest, Ruff, mypy
 
-**Close to my taste** prioritizes personal similarity. **More variety** reduces repetition
-among taste-related candidates. Both return up to six picks and exclude rated, watched
-and not-interested titles. These preferences apply only to the current request.
+## Run locally
 
-`POST /recommendations/tonight` accepts `type` (`movie` or `tv`), `genres` (OR semantics),
-`max_minutes` (1–1440), `year_from`/`year_to` (1800–2100), and `mode` (`familiar` or
-`discover`). Optional numeric filters accept `null`. Responses contain `items` and
-`status`: `ready`, `no_profile`, or `no_matches`. Empty results never silently relax filters.
+### Prerequisites
 
-Canonical SQL filters restrict eligible IDs before vector search, so unsuitable top
-matches cannot crowd out valid picks. The existing rating profile retrieves at most 60
-indexed candidates; MMR selects six using relevance weights 0.9 (familiar) or 0.55
-(discover). These are initial policy values, not empirically optimized quality claims.
-The existing catalogue schema and Qdrant payload work without migration or reindexing.
+Install Python 3.13+, [uv](https://docs.astral.sh/uv/), Node.js, pnpm 11, and Docker Desktop. You also need a Qdrant Cloud URL and API key for semantic features. A TMDB v3 API key is required only when synchronizing the catalogue; Google credentials are optional.
 
-## Local development
+Create a local configuration file and fill in the required values. Never commit secrets.
 
-Run commands from the repository root. Install Python 3.13+, uv, Node.js and the pnpm version declared in `package.json`. Copy `.env.example` to `.env` if you have not already configured it. Set the database connection, TMDB credentials, Qdrant Cloud URL/key and long random authentication secrets. Keep credentials local.
+```bash
+cp .env.example .env
+```
 
-```powershell
+At minimum, set secure values for `AUTH_JWT_SECRET` and `AUTH_SESSION_SECRET`, plus `QDRANT_URL`, `QDRANT_API_KEY`, and `QDRANT_COLLECTION`. Set `TMDB_API_KEY` before running catalogue synchronization.
+
+Install project dependencies and start PostgreSQL and Ollama:
+
+```bash
 uv sync --locked --group dev
 pnpm install --frozen-lockfile
 docker compose -f infra/compose.yaml --env-file .env --profile dependencies up -d postgres ollama
-uv run --group dev alembic -c apps/api/alembic.ini upgrade head
+uv run alembic -c apps/api/alembic.ini upgrade head
 docker compose -f infra/compose.yaml --env-file .env exec ollama ollama pull qwen3-embedding:0.6b
 ```
 
-Start the API and web development server in separate terminals:
+Start the API and web app in separate terminals:
 
-```powershell
+```bash
 uv run uvicorn app.main:app --app-dir apps/api --reload
 pnpm run web:dev
 ```
 
-The example configuration exposes the web application at `http://localhost:5173` and API documentation at `http://localhost:8000/docs`. On PowerShell installations that block the pnpm script shim, use `pnpm.cmd` for the same commands.
+Open the web app at `http://localhost:5173`. The API documentation is available at `http://localhost:8000/docs`.
 
-For Google sign-in, configure `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` and the exact registered `GOOGLE_REDIRECT_URI`. The local example is `http://localhost:8000/auth/google/callback`. Email/password authentication is also available. Access and refresh tokens use HttpOnly cookies; HTTPS deployments require `AUTH_COOKIE_SECURE=true`.
+## CLI
 
-## Catalogue and vectors
+Run these commands from the repository root with `uv run recsys`.
 
-```powershell
-uv run recsys diagnostics
-uv run recsys catalog sync
-uv run recsys catalog sync --type movie --pages 2
-uv run recsys catalog index
-```
+| Command | Purpose |
+| --- | --- |
+| `uv run recsys diagnostics` | Prints the active Python runtime as JSON. |
+| `uv run recsys catalog sync` | Imports popular English movies and TV series from TMDB, updates PostgreSQL, then rebuilds their Qdrant vectors. Defaults to five pages of each type. |
+| `uv run recsys catalog sync --type movie --pages 2` | Synchronizes only movies and limits TMDB discovery to two pages. `--type` accepts `all`, `movie`, or `tv`; `--pages` must be at least 1. |
+| `uv run recsys catalog index` | Indexes only canonical titles that do not yet have a Qdrant vector. It does not call TMDB or refresh existing vectors. |
 
-`catalog sync` defaults to five popularity-sorted TMDB discovery pages for each of English movies and TV series. It updates existing canonical records, then rebuilds vectors for the entire local catalogue, including previously indexed titles. Its JSON result contains `created`, `updated` and `indexed` counts.
-
-`catalog index` checks existing vector IDs in batches and indexes only missing titles. It returns `scanned`, `indexed` and `skipped` counts. It does not refresh existing vectors after metadata changes; use synchronization when those need rebuilding.
-
-Both indexing paths require Ollama with `qwen3-embedding:0.6b` and Qdrant Cloud. PostgreSQL is canonical; Qdrant stores derived vectors that can be rebuilt. There is no Qdrant fallback. Similar-title and personal recommendation logic lives in the API recommendation module; `ml/recsys` supplies the CLI.
-
-Users can browse and manage their library during onboarding. Ten ratings unlock personal recommendations, with separate movie and TV sections. Collaborative filtering and its experiment infrastructure were removed; the rationale is recorded in the specification.
-
-## Docker Compose
-
-```powershell
-docker compose -f infra/compose.yaml --env-file .env --profile full up --build -d
-docker compose -f infra/compose.yaml --env-file .env exec api alembic -c apps/api/alembic.ini upgrade head
-docker compose -f infra/compose.yaml --env-file .env exec ollama ollama pull qwen3-embedding:0.6b
-docker compose -f infra/compose.yaml --env-file .env exec api recsys catalog sync
-```
-
-Compose runs PostgreSQL, Ollama, API and web. Qdrant remains external. Migrations and model downloading are explicit steps. The API image includes the local console package so catalogue commands use the same code as native execution.
+`catalog sync` requires PostgreSQL, Ollama, Qdrant, and `TMDB_API_KEY`. `catalog index` requires PostgreSQL, Ollama, and Qdrant, but not TMDB. Both commands return JSON reports. Qdrant is derived storage and can be rebuilt; PostgreSQL remains the source of truth.
 
 ## Verification
 
-```powershell
-uv run --group dev --locked pytest
-uv run --group dev --locked ruff format --check .
-uv run --group dev --locked ruff check .
-uv run --group dev --locked mypy
+```bash
+uv run pytest
+uv run ruff format --check .
+uv run ruff check .
+uv run mypy
 pnpm run web:lint
 pnpm run web:typecheck
 pnpm run web:build
 ```
-
-The web typecheck checks both application and Vite configuration sources. Enable the tracked local hook with `git config core.hooksPath .githooks`. Tests run manually; CI is outside the current scope.
-
-Existing automated tests exercise REST contracts, use cases and isolated persistence. They do not establish live TMDB, Google OAuth, Ollama or Qdrant availability. Any additional Qdrant integration checks must use an isolated collection.
