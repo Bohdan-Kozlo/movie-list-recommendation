@@ -7,10 +7,12 @@ import { useCatalogue } from './useCatalogue'
 
 export function CataloguePage() {
   const {
-    parameters, setParameters, searchDraft, setSearchDraft,
-    catalogueQuery, filtersQuery, tmdbQuery, shouldSearchTmdb, importMutation,
-    pageCount, changeFilter, submitSearch, resetFilters, openTitle,
+    mode, setMode, parameters, setParameters, titleSearchDraft, setTitleSearchDraft,
+    descriptionDraft, setDescriptionDraft, semanticParameters, descriptionValidationError,
+    catalogueQuery, filtersQuery, semanticQuery, tmdbQuery, shouldSearchTmdb, importMutation,
+    pageCount, changeFilter, changeSemanticFormat, submitSearch, resetFilters, openTitle,
   } = useCatalogue()
+  const descriptionMode = mode === 'description'
   return (
     <main className="mx-auto w-full max-w-360 px-[4vw] pb-16">
       <SiteHeader onBrandClick={resetFilters} />
@@ -27,11 +29,17 @@ export function CataloguePage() {
       </section>
 
       <CatalogueFilters
+        mode={mode}
+        setMode={setMode}
         parameters={parameters}
+        semanticParameters={semanticParameters}
         filters={filtersQuery.data}
-        searchDraft={searchDraft}
-        setSearchDraft={setSearchDraft}
+        titleSearchDraft={titleSearchDraft}
+        setTitleSearchDraft={setTitleSearchDraft}
+        descriptionDraft={descriptionDraft}
+        setDescriptionDraft={setDescriptionDraft}
         changeFilter={changeFilter}
+        changeSemanticFormat={changeSemanticFormat}
         submitSearch={submitSearch}
         resetFilters={resetFilters}
       />
@@ -40,18 +48,20 @@ export function CataloguePage() {
         <div className="mb-6 flex items-baseline justify-between max-sm:flex-col max-sm:items-start max-sm:gap-2">
           <p className="m-0 font-mono text-xs font-bold uppercase tracking-[.12em] text-primary">Results</p>
           <p className="m-0 font-mono text-xs text-muted-foreground">
-            {catalogueQuery.data ? `${catalogueQuery.data.total} titles in the index` : 'Reading the index…'}
+            {descriptionMode
+              ? semanticParameters.description ? 'Up to 24 nearest indexed titles' : 'English descriptions only'
+              : catalogueQuery.data ? `${catalogueQuery.data.total} titles in the index` : 'Reading the index…'}
           </p>
         </div>
 
         {
-          catalogueQuery.isError && <CatalogueMessage
+          !descriptionMode && catalogueQuery.isError && <CatalogueMessage
             title="The catalogue is unavailable"
             body="Start the API and sync the catalogue, then try again."
           />
         }
         {
-          catalogueQuery.isLoading && <div className="grid grid-cols-4 gap-x-4 gap-y-[clamp(1rem,2.2vw,2.75rem)] max-md:grid-cols-2">
+          !descriptionMode && catalogueQuery.isLoading && <div className="grid grid-cols-4 gap-x-4 gap-y-[clamp(1rem,2.2vw,2.75rem)] max-md:grid-cols-2">
             {
               Array.from({ length: 8 }, (_, index) => <div
                 className="aspect-2/3 animate-[catalogue-scan_1.5s_linear_infinite] bg-[linear-gradient(110deg,#24384a_25%,#334e63_37%,#24384a_63%)] bg-size-[200%_100%] motion-reduce:animate-none"
@@ -61,7 +71,7 @@ export function CataloguePage() {
           </div>
         }
         {
-          catalogueQuery.data?.items.length === 0 && !shouldSearchTmdb && (
+          !descriptionMode && catalogueQuery.data?.items.length === 0 && !shouldSearchTmdb && (
             <CatalogueMessage
               title="No titles match these filters"
               body="Broaden a filter or search for another title."
@@ -69,16 +79,16 @@ export function CataloguePage() {
           )
         }
         {
-          shouldSearchTmdb && tmdbQuery.isLoading && <CatalogueMessage title="Searching TMDB" body="Looking beyond the local catalogue…" />
+          !descriptionMode && shouldSearchTmdb && tmdbQuery.isLoading && <CatalogueMessage title="Searching TMDB" body="Looking beyond the local catalogue…" />
         }
         {
-          shouldSearchTmdb && tmdbQuery.isError && <CatalogueMessage title="No local titles match" body="TMDB search is unavailable right now." />
+          !descriptionMode && shouldSearchTmdb && tmdbQuery.isError && <CatalogueMessage title="No local titles match" body="TMDB search is unavailable right now." />
         }
         {
-          shouldSearchTmdb && tmdbQuery.data?.items.length === 0 && <CatalogueMessage title="No titles match this search" body="Try another title." />
+          !descriptionMode && shouldSearchTmdb && tmdbQuery.data?.items.length === 0 && <CatalogueMessage title="No titles match this search" body="Try another title." />
         }
         {
-          shouldSearchTmdb && tmdbQuery.data && tmdbQuery.data.items.length > 0 && (
+          !descriptionMode && shouldSearchTmdb && tmdbQuery.data && tmdbQuery.data.items.length > 0 && (
             <div>
               <CatalogueMessage
                 title="Available from TMDB"
@@ -105,7 +115,7 @@ export function CataloguePage() {
           )
         }
         {
-          catalogueQuery.data && catalogueQuery.data.items.length > 0 && (
+          !descriptionMode && catalogueQuery.data && catalogueQuery.data.items.length > 0 && (
             <div className="grid grid-cols-4 gap-x-4 gap-y-[clamp(1rem,2.2vw,2.75rem)] max-md:grid-cols-2">
               {
                 catalogueQuery.data.items.map((title) => <TitleCard key={title.id} title={title} onOpen={openTitle} />)
@@ -113,10 +123,66 @@ export function CataloguePage() {
             </div>
           )
         }
+        {
+          descriptionMode && !semanticParameters.description && !descriptionValidationError && (
+            <CatalogueMessage
+              title="Describe what you want to watch"
+              body="Write an English plot, theme, or mood, then select Search."
+            />
+          )
+        }
+        {
+          descriptionMode && descriptionValidationError && (
+            <p role="alert" className="mt-5 text-rose-300">{descriptionValidationError}</p>
+          )
+        }
+        {
+          descriptionMode && semanticQuery.isLoading && <div className="grid grid-cols-4 gap-x-4 gap-y-[clamp(1rem,2.2vw,2.75rem)] max-md:grid-cols-2">
+            {
+              Array.from({ length: 8 }, (_, index) => <div
+                className="aspect-2/3 animate-[catalogue-scan_1.5s_linear_infinite] bg-[linear-gradient(110deg,#24384a_25%,#334e63_37%,#24384a_63%)] bg-size-[200%_100%] motion-reduce:animate-none"
+                key={index}
+              />)
+            }
+          </div>
+        }
+        {
+          descriptionMode && semanticQuery.isError && (
+            <div className="my-8 border-l-4 border-primary bg-card px-6 py-5">
+              <h2 className="m-0 font-display text-2xl font-medium">Description search is unavailable</h2>
+              <p className="mt-1.5 text-muted-foreground">Check the local services and try again.</p>
+              <button
+                className="mt-4 rounded-sm bg-primary px-4 py-2 font-mono text-xs font-bold uppercase tracking-[.1em] text-primary-foreground"
+                type="button"
+                onClick={() => semanticQuery.refetch()}
+              >Try again</button>
+            </div>
+          )
+        }
+        {
+          descriptionMode && semanticQuery.data?.items.length === 0 && (
+            <CatalogueMessage
+              title="No indexed titles match this format"
+              body="Try another description or choose a different format."
+            />
+          )
+        }
+        {
+          descriptionMode && semanticQuery.data && semanticQuery.data.items.length > 0 && (
+            <div>
+              <p className="mb-6 font-mono text-xs font-bold uppercase tracking-[.12em] text-primary">Semantically matches your description</p>
+              <div className="grid grid-cols-4 gap-x-4 gap-y-[clamp(1rem,2.2vw,2.75rem)] max-md:grid-cols-2">
+                {
+                  semanticQuery.data.items.map((title) => <TitleCard key={title.id} title={title} onOpen={openTitle} />)
+                }
+              </div>
+            </div>
+          )
+        }
       </section>
 
       {
-        catalogueQuery.data && catalogueQuery.data.total > 0 && (
+        !descriptionMode && catalogueQuery.data && catalogueQuery.data.total > 0 && (
           <nav
             className="mt-16 flex items-center justify-center gap-4 font-mono text-xs text-muted-foreground max-sm:gap-2"
             aria-label="Catalogue pages"

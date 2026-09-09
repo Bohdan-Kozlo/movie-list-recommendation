@@ -11,6 +11,10 @@ export type CataloguePage = {
   pageSize: number
 }
 
+export type SemanticDescriptionSearch = {
+  items: CatalogueTitle[]
+}
+
 export type CatalogueFilters = {
   genres: string[]
   years: number[]
@@ -43,6 +47,11 @@ export type BrowseParameters = {
   page: number
 }
 
+export type SemanticDescriptionParameters = {
+  description: string
+  type: '' | 'movie' | 'tv'
+}
+
 export async function fetchCatalogue(parameters: BrowseParameters): Promise<CataloguePage> {
   const searchParameters = new URLSearchParams({ page: String(parameters.page) })
   if (parameters.query) searchParameters.set('query', parameters.query)
@@ -50,6 +59,19 @@ export async function fetchCatalogue(parameters: BrowseParameters): Promise<Cata
   if (parameters.genre) searchParameters.set('genre', parameters.genre)
   if (parameters.year) searchParameters.set('year', parameters.year)
   return catalogueRequest<CataloguePage>(`/catalogue/titles?${searchParameters}`)
+}
+
+export function searchCatalogueByDescription(
+  parameters: SemanticDescriptionParameters,
+): Promise<SemanticDescriptionSearch> {
+  return catalogueRequest<SemanticDescriptionSearch>('/catalogue/semantic-search', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      description: parameters.description,
+      ...(parameters.type ? { type: parameters.type } : {}),
+    }),
+  })
 }
 
 export function fetchCatalogueFilters(): Promise<CatalogueFilters> {

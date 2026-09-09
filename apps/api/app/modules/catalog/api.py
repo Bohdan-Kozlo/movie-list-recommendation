@@ -10,19 +10,27 @@ from app.modules.catalog.dependencies import (
     get_catalogue_use_cases,
     get_import_tmdb_title_use_case,
     get_search_external_titles_use_case,
+    get_semantic_description_search_use_case,
 )
 from app.modules.catalog.dto import (
     CatalogueFacetsResponse,
     CataloguePageResponse,
     ExternalTitleSearchResponse,
+    SemanticDescriptionSearchRequest,
+    SemanticDescriptionSearchResponse,
     TitleDetailsResponse,
     to_catalogue_query,
     to_details_response,
     to_external_title_response,
     to_facets_response,
     to_page_response,
+    to_semantic_description_search_response,
 )
-from app.modules.catalog.use_cases import ImportTmdbTitle, SearchExternalTitles
+from app.modules.catalog.use_cases import (
+    ImportTmdbTitle,
+    SearchCatalogueByDescription,
+    SearchExternalTitles,
+)
 
 router = APIRouter(prefix="/catalogue", tags=["catalogue"])
 
@@ -42,6 +50,21 @@ def list_titles(
         to_catalogue_query(query, title_type, genre, language, year, page)
     )
     return to_page_response(result)
+
+
+@router.post("/semantic-search", response_model=SemanticDescriptionSearchResponse)
+def search_catalogue_by_description(
+    request: SemanticDescriptionSearchRequest,
+    use_case: Annotated[
+        SearchCatalogueByDescription, Depends(get_semantic_description_search_use_case)
+    ],
+) -> SemanticDescriptionSearchResponse:
+    """Find ranked local titles matching a natural-language description."""
+    try:
+        titles = use_case.execute(request.description, request.title_type)
+    except RuntimeError as error:
+        raise HTTPException(status_code=503, detail="Description search is unavailable.") from error
+    return to_semantic_description_search_response(titles)
 
 
 @router.get("/tmdb-search", response_model=ExternalTitleSearchResponse)

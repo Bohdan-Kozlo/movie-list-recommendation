@@ -1,7 +1,15 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { type FormEvent, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { type BrowseParameters, fetchCatalogue, fetchCatalogueFilters, importTmdbTitle, searchTmdbTitles } from './api'
+import {
+  type BrowseParameters,
+  type SemanticDescriptionParameters,
+  fetchCatalogue,
+  fetchCatalogueFilters,
+  importTmdbTitle,
+  searchCatalogueByDescription,
+  searchTmdbTitles,
+} from './api'
 import { catalogueKeys } from './queries'
 
 const initialParameters: BrowseParameters = {
@@ -12,15 +20,31 @@ const initialParameters: BrowseParameters = {
   page: 1,
 }
 
+const initialSemanticParameters: SemanticDescriptionParameters = {
+  description: '',
+  type: '',
+}
+
+export type CatalogueSearchMode = 'title' | 'description'
+
 export function useCatalogue() {
   const navigate = useNavigate()
+  const [mode, setMode] = useState<CatalogueSearchMode>('title')
   const [parameters, setParameters] = useState(initialParameters)
-  const [searchDraft, setSearchDraft] = useState('')
+  const [titleSearchDraft, setTitleSearchDraft] = useState('')
+  const [descriptionDraft, setDescriptionDraft] = useState('')
+  const [semanticParameters, setSemanticParameters] = useState(initialSemanticParameters)
+  const [descriptionValidationError, setDescriptionValidationError] = useState<string | null>(null)
   const catalogueQuery = useQuery({
     queryKey: catalogueKeys.list(parameters),
     queryFn: () => fetchCatalogue(parameters),
   })
   const filtersQuery = useQuery({ queryKey: catalogueKeys.filters, queryFn: fetchCatalogueFilters })
+  const semanticQuery = useQuery({
+    queryKey: catalogueKeys.semantic(semanticParameters),
+    queryFn: () => searchCatalogueByDescription(semanticParameters),
+    enabled: Boolean(semanticParameters.description),
+  })
   const shouldSearchTmdb = Boolean(
     parameters.query && !parameters.genre && !parameters.year && catalogueQuery.data?.total === 0,
   )
@@ -44,18 +68,46 @@ export function useCatalogue() {
 
   function submitSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    setParameters((current) => ({ ...current, query: searchDraft.trim(), page: 1 }))
+    if (mode === 'title') {
+      setParameters((current) => ({ ...current, query: titleSearchDraft.trim(), page: 1 }))
+      return
+    }
+
+    const description = descriptionDraft.trim()
+    if (description.length < 3 || description.length > 500) {
+      setDescriptionValidationError('Use a description from 3 to 500 characters.')
+      return
+    }
+    setDescriptionValidationError(null)
+    if (description === semanticParameters.description) {
+      void semanticQuery.refetch()
+      return
+    }
+    setSemanticParameters((current) => ({ ...current, description }))
   }
 
   function resetFilters() {
-    setSearchDraft('')
-    setParameters(initialParameters)
+    if (mode === 'title') {
+      setTitleSearchDraft('')
+      setParameters(initialParameters)
+      return
+    }
+    setDescriptionDraft('')
+    setSemanticParameters(initialSemanticParameters)
+    setDescriptionValidationError(null)
+  }
+
+  function changeSemanticFormat(value: SemanticDescriptionParameters['type']) {
+    setSemanticParameters((current) => ({ ...current, type: value }))
   }
 
   return {
-    parameters, setParameters, searchDraft, setSearchDraft,
-    catalogueQuery, filtersQuery, tmdbQuery, shouldSearchTmdb, importMutation,
+    mode, setMode,
+    parameters, setParameters, titleSearchDraft, setTitleSearchDraft,
+    descriptionDraft, setDescriptionDraft, semanticParameters, descriptionValidationError,
+    catalogueQuery, filtersQuery, semanticQuery, tmdbQuery, shouldSearchTmdb, importMutation,
     pageCount, changeFilter, submitSearch, resetFilters,
+    changeSemanticFormat,
     openTitle: (id: string) => navigate(`/catalogue/${id}`),
   }
 }

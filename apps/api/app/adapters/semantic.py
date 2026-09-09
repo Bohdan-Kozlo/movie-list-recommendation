@@ -36,6 +36,11 @@ class SemanticTitleIndexer:
             vector, limit=limit, title_type=title_type, excluded_ids=excluded_ids
         )
 
+    def search_description(self, description: str, title_type: str | None, limit: int) -> list[str]:
+        return self._vectors.search(
+            self._embeddings.embed(description), limit=limit, title_type=title_type
+        )
+
     def search_tonight(
         self, vector: list[float], title_type: str, eligible_ids: set[str], limit: int
     ) -> list[str]:

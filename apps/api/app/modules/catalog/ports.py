@@ -32,3 +32,9 @@ class CatalogueMetadataGateway(Protocol):
     def title_details(self, title_type: str, tmdb_id: int) -> SyncedTitle: ...
 
     def search_titles(self, query: str, title_type: str | None) -> list[ExternalTitle]: ...
+
+
+class SemanticDescriptionIndex(Protocol):
+    def search_description(
+        self, description: str, title_type: str | None, limit: int
+    ) -> list[str]: ...

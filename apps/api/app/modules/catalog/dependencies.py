@@ -12,6 +12,7 @@ from app.modules.catalog.use_cases import (
     GetTitleDetails,
     ImportTmdbTitle,
     SearchCatalogue,
+    SearchCatalogueByDescription,
     SearchExternalTitles,
 )
 
@@ -38,6 +39,12 @@ def get_import_tmdb_title_use_case() -> ImportTmdbTitle:
     repository = SqlAlchemyCatalogueRepository(get_database_engine(settings.database_url))
     gateway = TmdbClient(settings.require_tmdb_api_key(), settings.tmdb_base_url)
     return ImportTmdbTitle(repository, gateway, create_semantic_index(settings))
+
+
+def get_semantic_description_search_use_case() -> SearchCatalogueByDescription:
+    settings = Settings.from_environment()
+    repository = SqlAlchemyCatalogueRepository(get_database_engine(settings.database_url))
+    return SearchCatalogueByDescription(repository, create_semantic_index(settings))
 
 
 def configured_catalogue_use_cases(database_url: str) -> CatalogueUseCases:
