@@ -1,1 +1,0 @@
-"""Qdrant Cloud adapters."""

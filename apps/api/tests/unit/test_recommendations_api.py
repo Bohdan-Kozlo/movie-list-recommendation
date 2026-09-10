@@ -1,6 +1,8 @@
 from datetime import date
 from types import SimpleNamespace
 
+from fastapi.testclient import TestClient
+
 from app.adapters.tmdb.client import TmdbNotFoundError
 from app.main import app
 from app.modules.auth.dependencies import get_current_user
@@ -21,7 +23,6 @@ from app.modules.recommendations.domain import (
     SimilarTitle,
 )
 from app.modules.recommendations.use_cases import GetPersonalRecommendations
-from fastapi.testclient import TestClient
 
 
 def similar_title() -> SimilarTitle:

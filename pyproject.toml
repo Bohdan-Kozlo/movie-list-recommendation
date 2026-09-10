@@ -34,6 +34,7 @@ dev = [
 [tool.uv.build-backend]
 module-name = "recsys"
 module-root = "ml"
+namespace = true
 
 [tool.pytest.ini_options]
 testpaths = ["apps/api/tests", "ml/tests"]
@@ -42,11 +43,17 @@ pythonpath = ["apps/api"]
 [tool.ruff]
 target-version = "py313"
 line-length = 100
+src = ["apps/api", "ml"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app", "recsys", "test_recommendations_application"]
 
 [tool.mypy]
 files = ["apps/api/app", "ml/recsys"]
 python_version = "3.13"
 strict = true
+explicit_package_bases = true
+mypy_path = ["apps/api", "ml"]

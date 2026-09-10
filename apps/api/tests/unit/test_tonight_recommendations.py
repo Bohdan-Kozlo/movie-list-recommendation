@@ -6,6 +6,11 @@ from types import SimpleNamespace
 from uuid import uuid4
 
 import pytest
+from fastapi.testclient import TestClient
+from qdrant_client import QdrantClient as QdrantSdkClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session
+
 from app.adapters.postgres.recommendation_repository import (
     SqlAlchemyPersonalRecommendationRepository,
 )
@@ -25,10 +30,6 @@ from app.modules.recommendations.tonight import TonightPreferences
 from app.modules.recommendations.use_cases.get_tonight_recommendations import (
     GetTonightRecommendations,
 )
-from fastapi.testclient import TestClient
-from qdrant_client import QdrantClient as QdrantSdkClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session
 from test_recommendations_application import FakePersonalRepository, title
 
 

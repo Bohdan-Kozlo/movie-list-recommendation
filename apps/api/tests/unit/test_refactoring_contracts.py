@@ -5,13 +5,14 @@ from concurrent.futures import ThreadPoolExecutor
 from types import SimpleNamespace
 
 import pytest
+from fastapi.testclient import TestClient
+
 from app.core.database import dispose_database_engines, get_database_engine
 from app.main import app
 from app.modules.catalog.dependencies import get_search_external_titles_use_case
 from app.modules.catalog.domain import ExternalTitle
 from app.modules.recommendations.domain import RatedTitle
 from app.modules.recommendations.use_cases import GetPersonalRecommendations
-from fastapi.testclient import TestClient
 from recsys import catalogue, cli
 from test_recommendations_application import FakePersonalIndex, FakePersonalRepository, title
 

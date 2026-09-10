@@ -2,6 +2,9 @@ from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from uuid import uuid4
 
+from fastapi import Request, Response
+from fastapi.testclient import TestClient
+
 from app.main import app
 from app.modules.auth.api import get_google_provider
 from app.modules.auth.dependencies import get_auth_use_cases
@@ -12,8 +15,6 @@ from app.modules.auth.domain import (
     SessionTokens,
     User,
 )
-from fastapi import Request, Response
-from fastapi.testclient import TestClient
 
 
 class FakeAuthService:

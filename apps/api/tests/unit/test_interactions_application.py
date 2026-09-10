@@ -1,6 +1,7 @@
 from uuid import UUID, uuid4
 
 import pytest
+
 from app.modules.interactions.domain import DuplicateRatingError
 from app.modules.interactions.use_cases import (
     AddNotInterested,

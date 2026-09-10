@@ -1,7 +1,8 @@
 from uuid import uuid4
 
-from app.adapters.postgres.onboarding_repository import SqlAlchemyOnboardingRepository
 from sqlalchemy.dialects import postgresql
+
+from app.adapters.postgres.onboarding_repository import SqlAlchemyOnboardingRepository
 
 
 def test_popular_selection_excludes_titles_already_rated_by_the_current_user() -> None:

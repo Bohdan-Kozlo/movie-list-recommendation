@@ -1,12 +1,13 @@
 from types import SimpleNamespace
 from uuid import uuid4
 
+from fastapi.testclient import TestClient
+
 from app.main import app
 from app.modules.auth.dependencies import get_current_user
 from app.modules.auth.domain import User
 from app.modules.onboarding.dependencies import get_onboarding_use_cases
 from app.modules.onboarding.domain import OnboardingProgress, OnboardingTitle
-from fastapi.testclient import TestClient
 
 
 def test_authenticated_user_can_load_onboarding_progress_and_choices() -> None:

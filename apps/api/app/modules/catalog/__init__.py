@@ -1,1 +1,0 @@
-"""Catalogue discovery module."""

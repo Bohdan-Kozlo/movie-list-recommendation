@@ -1,1 +1,0 @@
-"""Authenticated user-library interactions."""

@@ -2,6 +2,7 @@ from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
 import pytest
+
 from app.modules.auth.dependencies import AuthUseCases
 from app.modules.auth.domain import (
     DuplicateEmailError,

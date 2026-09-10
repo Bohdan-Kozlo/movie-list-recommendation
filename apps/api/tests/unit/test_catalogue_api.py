@@ -1,6 +1,8 @@
 from datetime import date
 from types import SimpleNamespace
 
+from fastapi.testclient import TestClient
+
 from app.main import app
 from app.modules.catalog.dependencies import (
     get_catalogue_use_cases,
@@ -13,7 +15,6 @@ from app.modules.catalog.domain import (
     TitleDetails,
     TitleSummary,
 )
-from fastapi.testclient import TestClient
 
 
 class FakeCatalogueService:

@@ -1,12 +1,13 @@
 from dataclasses import replace
 from datetime import date
 
+from sqlalchemy import create_engine, select
+from sqlalchemy.orm import Session
+
 from app.adapters.postgres.catalogue_repository import SqlAlchemyCatalogueRepository
 from app.modules.catalog.models import Base, CatalogueTitle, ExternalIdentifier
 from app.modules.catalog.sync import SyncedGenre, SyncedTitle
 from app.modules.catalog.use_cases import SynchronizeCatalogue
-from sqlalchemy import create_engine, select
-from sqlalchemy.orm import Session
 
 
 class FakeTmdbGateway:

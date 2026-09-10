@@ -1,12 +1,13 @@
 from types import SimpleNamespace
 from uuid import UUID, uuid4
 
+from fastapi.testclient import TestClient
+
 from app.main import app
 from app.modules.auth.api import get_current_user
 from app.modules.auth.domain import User
 from app.modules.interactions.dependencies import get_interaction_use_cases
 from app.modules.interactions.domain import DuplicateRatingError, InteractionStatus, LibraryItem
-from fastapi.testclient import TestClient
 
 
 class FakeInteractions:
